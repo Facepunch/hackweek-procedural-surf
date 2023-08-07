@@ -11,10 +11,12 @@ public class ViewportRendering : NativeRenderingWidget
 	{
 		MinimumSize = 300;
 
-		Camera = new SceneCamera( "CsgEditorCamera" )
+		Camera = new SceneCamera( "SurfMapEditorCamera" )
 		{
 			World = world,
-			BackgroundColor = Color.Black
+			BackgroundColor = Color.Black,
+			ZNear = 1f,
+			ZFar = 65536f
 		};
 
 		MouseTracking = true;
@@ -33,7 +35,6 @@ public class ViewportRendering : NativeRenderingWidget
 			{
 				obj.RenderingEnabled = true;
 			}
-
 		}
 	}
 
