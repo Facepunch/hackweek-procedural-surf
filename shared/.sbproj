@@ -1,0 +1,20 @@
+{
+  "Title": "Procedural Surf Shared",
+  "Type": "library",
+  "Org": "facepunch",
+  "Ident": "procsurfshared",
+  "Tags": null,
+  "Schema": 1,
+  "HasAssets": true,
+  "AssetsPath": "",
+  "Resources": null,
+  "MenuResources": null,
+  "HasCode": true,
+  "CodePath": ".",
+  "PackageReferences": [],
+  "EditorReferences": null,
+  "Metadata": {
+    "ProjectTemplate": null,
+    "CsProjName": ""
+  }
+}

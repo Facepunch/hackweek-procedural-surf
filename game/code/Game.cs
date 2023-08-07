@@ -20,7 +20,7 @@ namespace Sandbox;
 /// </summary>
 public partial class MyGame : GameManager
 {
-	public SurfRamp TestRamp { get; set; } = ResourceLibrary.Get<SurfRamp>( "ramps/example.surf" );
+	public SurfMap Map { get; set; } = ResourceLibrary.Get<SurfMap>( "ramps/example.surf" );
 
 	public MyGame()
 	{
@@ -55,6 +55,6 @@ public partial class MyGame : GameManager
 	[GameEvent.Tick.Server]
 	private void ServerTick()
 	{
-		TestRamp?.DrawDebug();
+		Map?.DrawDebug();
 	}
 }
