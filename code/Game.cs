@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Sandbox.Surf;
 
 //
 // You don't need to put things in a namespace, but it doesn't hurt.
@@ -19,6 +20,8 @@ namespace Sandbox;
 /// </summary>
 public partial class MyGame : GameManager
 {
+	public SurfRamp TestRamp { get; set; } = ResourceLibrary.Get<SurfRamp>( "ramps/example.surf" );
+
 	public MyGame()
 	{
 	}
@@ -47,5 +50,11 @@ public partial class MyGame : GameManager
 			tx.Position = tx.Position + Vector3.Up * 50.0f; // raise it up
 			pawn.Transform = tx;
 		}
+	}
+
+	[GameEvent.Tick.Server]
+	private void ServerTick()
+	{
+		TestRamp?.DrawDebug();
 	}
 }
