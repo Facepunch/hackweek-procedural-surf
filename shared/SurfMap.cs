@@ -19,28 +19,15 @@ public partial class SurfMap : GameResource
 
 			for ( var i = 0; i <= (Nodes.Count - 1) * 16; ++i )
 			{
-				DrawDebug( i / 16f );
+				var index = i / 16f;
+
+				var prev = Nodes[Math.Clamp( (int)MathF.Floor( index ), 0, Nodes.Count - 1 )];
+				var next = Nodes[Math.Clamp( (int)MathF.Ceiling( index ), 0, Nodes.Count - 1 )];
+
+				var t = index - MathF.Floor( index );
+
+				Node.CubicBeizer( in prev, in next, t ).DrawDebug();
 			}
-		}
-
-		public void DrawDebug( float index )
-		{
-			var prev = Nodes[Math.Clamp( (int) MathF.Floor( index ), 0, Nodes.Count - 1 )];
-			var next = Nodes[Math.Clamp( (int) MathF.Ceiling( index ), 0, Nodes.Count - 1 )];
-
-			var t = index - MathF.Floor( index );
-
-			var node = Node.CubicBeizer( prev, next, t );
-
-			var up = node.Rotation.Up;
-			var right = node.Rotation.Right;
-
-			var top = node.Position;
-			var bl = top - up * node.Height - right * node.Width * 0.5f;
-			var br = bl + right * node.Width;
-
-			DebugOverlay.Line( top, br );
-			DebugOverlay.Line( top, bl );
 		}
 	}
 
@@ -65,6 +52,19 @@ public partial class SurfMap : GameResource
 				Width = MathX.Lerp( a.Width, b.Width, t ),
 				Height = MathX.Lerp( a.Width, b.Width, t )
 			};
+		}
+
+		public void DrawDebug()
+		{
+			var up = Rotation.Up;
+			var right = Rotation.Right;
+
+			var top = Position;
+			var bl = top - up * Height - right * Width * 0.5f;
+			var br = bl + right * Width;
+
+			DebugOverlay.Line( top, br );
+			DebugOverlay.Line( top, bl );
 		}
 	}
 

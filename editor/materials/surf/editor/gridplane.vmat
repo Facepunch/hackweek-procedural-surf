@@ -1,0 +1,9 @@
+// THIS FILE IS AUTO-GENERATED
+
+Layer0
+{
+	shader "shaders/gridplane.shader"
+
+	//---- Color ----
+	Texture "textures/surf/editor/gridplane_alpha.png"
+}

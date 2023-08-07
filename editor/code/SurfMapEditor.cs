@@ -1,4 +1,5 @@
-﻿using Editor;
+﻿using System.Collections.Generic;
+using Editor;
 
 namespace Sandbox.Surf.Editor;
 
@@ -37,6 +38,63 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 	{
 		Target = map;
 
+		if ( Target.Ramps == null )
+		{
+			Target.Ramps = new List<SurfMap.Ramp>
+			{
+				new()
+				{
+					Nodes = new List<SurfMap.Node>
+					{
+						new()
+						{
+							Position = new Vector3( 0f, 0f, 0f ),
+							Rotation = Rotation.Identity,
+							Width = 384f,
+							Height = 256f,
+							Tangent = 128f
+						},
+
+						new()
+						{
+							Position = new Vector3( 1024f, 0f, 0f ),
+							Rotation = Rotation.Identity,
+							Width = 384f,
+							Height = 256f,
+							Tangent = 128f
+						},
+
+						new()
+						{
+							Position = new Vector3( 2048f, 0f, 0f ),
+							Rotation = Rotation.Identity,
+							Width = 384f,
+							Height = 256f,
+							Tangent = 128f
+						},
+
+						new()
+						{
+							Position = new Vector3( 1024f * 3f, 0f, 0f ),
+							Rotation = Rotation.Identity,
+							Width = 384f,
+							Height = 256f,
+							Tangent = 128f
+						},
+
+						new()
+						{
+							Position = new Vector3( 4096f, 0f, 0f ),
+							Rotation = Rotation.Identity,
+							Width = 384f,
+							Height = 256f,
+							Tangent = 128f
+						}
+					}
+				}
+			};
+		}
+
 		SetWindowIcon( Asset.AssetType.Icon128 );
 
 		UpdateWindowTitle();
@@ -60,6 +118,10 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 		_ = new SceneSkyBox( World, Material.Load( "materials/skybox/light_test_default.vmat" ) );
 		_ = new SceneCubemap( World, Texture.Load( "textures/cubemaps/default.vtex" ), BBox.FromPositionAndSize( Vector3.Zero, 1000 ) );
+		var plane = new GridPlane( World );
+
+		plane.FadeRadius = 8192f;
+		plane.GridSize = 128f;
 	}
 
 	protected override void RestoreDefaultDockLayout()
