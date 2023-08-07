@@ -51,10 +51,4 @@ public partial class MyGame : GameManager
 			pawn.Transform = tx;
 		}
 	}
-
-	[GameEvent.Tick.Server]
-	private void ServerTick()
-	{
-		Map?.DrawDebug();
-	}
 }

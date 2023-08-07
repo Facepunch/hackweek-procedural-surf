@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.IO;
 using Editor;
+using Sandbox.Diagnostics;
 
 namespace Sandbox.Surf.Editor;
 
@@ -49,7 +52,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 						new()
 						{
 							Position = new Vector3( 0f, 0f, 0f ),
-							Rotation = Rotation.Identity,
 							Width = 384f,
 							Height = 256f,
 							Tangent = 128f
@@ -58,7 +60,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 						new()
 						{
 							Position = new Vector3( 1024f, 0f, 0f ),
-							Rotation = Rotation.Identity,
 							Width = 384f,
 							Height = 256f,
 							Tangent = 128f
@@ -67,7 +68,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 						new()
 						{
 							Position = new Vector3( 2048f, 0f, 0f ),
-							Rotation = Rotation.Identity,
 							Width = 384f,
 							Height = 256f,
 							Tangent = 128f
@@ -76,7 +76,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 						new()
 						{
 							Position = new Vector3( 1024f * 3f, 0f, 0f ),
-							Rotation = Rotation.Identity,
 							Width = 384f,
 							Height = 256f,
 							Tangent = 128f
@@ -85,7 +84,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 						new()
 						{
 							Position = new Vector3( 4096f, 0f, 0f ),
-							Rotation = Rotation.Identity,
 							Width = 384f,
 							Height = 256f,
 							Tangent = 128f
@@ -131,6 +129,14 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		RebuildUI();
 	}
 
+	public void MarkChanged()
+	{
+		if ( HasUnsavedChanges ) return;
+
+		HasUnsavedChanges = true;
+		UpdateWindowTitle();
+	}
+
 	public void RebuildUI()
 	{
 		DockManager.Clear();
@@ -140,7 +146,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 		{
 			var file = MenuBar.AddMenu( "File" );
-			file.AddOption( new Option( "Save" ) { Shortcut = "Ctrl+S", Triggered = () => { } } );
+			file.AddOption( new Option( "Save" ) { Shortcut = "Ctrl+S", Triggered = Save } );
 			file.AddSeparator();
 			file.AddOption( new Option( "Exit" ) { Triggered = Close } );
 
@@ -150,5 +156,13 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 		var vp = new Viewport( this );
 		DockManager.AddDock( null, vp );
+	}
+	private void Save()
+	{
+		Asset.SaveToMemory( Target );
+		Asset.SaveToDisk( Target );
+
+		HasUnsavedChanges = false;
+		UpdateWindowTitle();
 	}
 }

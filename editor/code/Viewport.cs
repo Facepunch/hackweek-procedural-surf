@@ -51,7 +51,7 @@ public class Viewport : Frame
 			return;
 		}
 
-		Editor.GizmoInstance.FirstPersonCamera( Rendering.Camera, Rendering );
+		FirstPersonCamera( Editor.GizmoInstance, Rendering.Camera, Rendering );
 		Editor.GizmoInstance.UpdateInputs( Rendering.Camera, Rendering );
 
 		using ( Editor.GizmoInstance.Push() )
@@ -82,26 +82,35 @@ public class Viewport : Frame
 						{
 							if ( Scaling )
 							{
-								if ( Gizmo.Control.Arrow( "Tangent", node.Rotation.Forward, out var tangent, node.Tangent, girth: 32f ) )
+								using ( Gizmo.GizmoControls.PushFixedScale() )
 								{
-									node.Tangent += tangent;
-									ramp.Nodes[j] = node;
+									var forward = Rotation.From( node.Pitch, node.Yaw, 0f ).Forward;
+
+									if ( Gizmo.Control.Arrow( "Tangent", forward, out var tangent ) )
+									{
+										node.Tangent += tangent;
+										ramp.Nodes[j] = node;
+										Editor.MarkChanged();
+									}
 								}
 							}
 							else if ( Rotating )
 							{
-								if ( Gizmo.Control.Rotate( "Rotation", node.Rotation, out var newRot ) )
+								if ( Gizmo.Control.Rotate( "Rotation", new Angles( node.Pitch, node.Yaw, 0f ), out var newAngles ) )
 								{
-									node.Rotation = newRot;
+									node.Pitch = Math.Clamp( newAngles.pitch, -80f, 80f );
+									node.Yaw = newAngles.yaw;
 									ramp.Nodes[j] = node;
+									Editor.MarkChanged();
 								}
 							}
 							else
 							{
-								if ( Gizmo.Control.Position( "Position", node.Position, out var newPos, node.Rotation ) )
+								if ( Gizmo.Control.Position( "Position", node.Position, out var newPos, Rotation.From( node.Pitch, node.Yaw, 0f ) ) )
 								{
 									node.Position = newPos;
 									ramp.Nodes[j] = node;
+									Editor.MarkChanged();
 								}
 							}
 						}
@@ -118,8 +127,10 @@ public class Viewport : Frame
 
 						var node = Node.CubicBeizer( in prev, in next, t );
 
-						var up = node.Rotation.Up;
-						var right = node.Rotation.Right;
+						var rotation = Rotation.From( node.Pitch, node.Yaw, 0f );
+						var forward = rotation.Forward;
+						var right = Vector3.Cross( forward, new Vector3( 0f, 0f, 1f ) ).Normal;
+						var up = Vector3.Cross( right, forward ).Normal;
 
 						var top = node.Position;
 						var bl = top - up * node.Height - right * node.Width * 0.5f;
@@ -129,6 +140,76 @@ public class Viewport : Frame
 						Gizmo.Draw.Line( top, br );
 					}
 				}
+			}
+		}
+	}
+
+	public static void FirstPersonCamera( Gizmo.Instance self, SceneCamera camera, Widget canvas )
+	{
+		ArgumentNullException.ThrowIfNull( camera );
+		ArgumentNullException.ThrowIfNull( canvas );
+
+		var rightMouse = Application.MouseButtons.HasFlag( MouseButtons.Right );
+		var middleMouse = Application.MouseButtons.HasFlag( MouseButtons.Middle );
+
+		if ( (rightMouse || middleMouse) && canvas.IsUnderMouse )
+		{
+			canvas.Focus();
+
+			var delta = (Application.CursorPosition - self.PreviousInput.CursorPosition) * 0.1f;
+
+			// lock to the center of the screen
+			Application.CursorPosition = canvas.ScreenPosition + canvas.Size * 0.5f;
+
+			if ( self.ControlMode != "firstperson" )
+			{
+				delta = 0;
+				self.ControlMode = "firstperson";
+				self.StompCursorPosition( Application.CursorPosition );
+				Application.AllowShortcuts = false;
+			}
+
+			var moveSpeed = 8f;
+
+			if ( Application.KeyboardModifiers.HasFlag( KeyboardModifiers.Shift ) ) moveSpeed *= 6.0f;
+			if ( Application.KeyboardModifiers.HasFlag( KeyboardModifiers.Alt ) ) moveSpeed /= 6.0f;
+
+			if ( rightMouse )
+			{
+				var angles = camera.Angles;
+
+				angles.roll = 0;
+				angles.yaw -= delta.x;
+				angles.pitch += delta.y;
+
+				camera.Angles = angles;
+			}
+			else if ( middleMouse )
+			{
+				camera.Position += camera.Rotation.Right * delta.x * moveSpeed * 2f;
+				camera.Position += camera.Rotation.Down * delta.y * moveSpeed * 2f;
+			}
+
+			var move = Vector3.Zero;
+
+			if ( Application.IsKeyDown( KeyCode.W ) ) move += camera.Rotation.Forward;
+			if ( Application.IsKeyDown( KeyCode.S ) ) move += camera.Rotation.Backward;
+			if ( Application.IsKeyDown( KeyCode.A ) ) move += camera.Rotation.Left;
+			if ( Application.IsKeyDown( KeyCode.D ) ) move += camera.Rotation.Right;
+
+			move = move.Normal;
+
+			camera.Position += move * RealTime.Delta * 100.0f * moveSpeed;
+			canvas.Cursor = CursorShape.Blank;
+		}
+		else
+		{
+			canvas.Cursor = CursorShape.None;
+
+			if ( self.ControlMode != "mouse" )
+			{
+				self.ControlMode = "mouse";
+				Application.AllowShortcuts = true;
 			}
 		}
 	}
