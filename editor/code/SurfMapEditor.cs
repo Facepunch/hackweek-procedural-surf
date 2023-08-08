@@ -14,7 +14,8 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 	public bool HasUnsavedChanges { get; private set; }
 
 	public Asset Asset { get; private set; }
-	public SurfMap Target { get; private set; }
+	public SurfMapAsset Target { get; private set; }
+	public SurfMap Map { get; }
 	public SceneWorld World { get; }
 	public Gizmo.Instance GizmoInstance { get; }
 
@@ -27,6 +28,8 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		GizmoInstance = new Gizmo.Instance();
 		World = GizmoInstance.World;
 
+		Map = new SurfMap( World );
+
 		SetupWorld();
 	}
 
@@ -34,26 +37,13 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 	{
 		Asset = asset;
 
-		LoadFrom( Asset.LoadResource<SurfMap>() );
+		LoadFrom( Asset.LoadResource<SurfMapAsset>() );
 	}
 
-	private void LoadFrom( SurfMap map )
+	private void LoadFrom( SurfMapAsset target )
 	{
-		Target = map;
-
-		if ( Target.IsUninitialized )
-		{
-			var supportA = Target.AddSupportBracket();
-			var supportB = Target.AddSupportBracket();
-
-			supportA.Position = new Vector3( -1024f, 0f, 512f );
-			supportB.Position = new Vector3( 1024f, 0f, 512f );
-
-			var attachA = Target.AddBracketAttachment( supportA );
-			var attachB = Target.AddBracketAttachment( supportB );
-
-			Target.AddTrackSection( attachA, attachB );
-		}
+		Target = target;
+		Map.Load( target );
 
 		SetWindowIcon( Asset.AssetType.Icon128 );
 
@@ -70,7 +60,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 	private void SetupWorld()
 	{
-		_ = new SceneSunLight( World, Rotation.From( -50f, 30f, 0f ), Color.White * 6.0f + Color.Cyan * 1.0f )
+		_ = new SceneSunLight( World, Rotation.From( -80f, 30f, 0f ), Color.White * 6.0f + Color.Cyan * 1.0f )
 		{
 			ShadowsEnabled = true,
 			SkyColor = Color.White * 0.15f + Color.Cyan * 0.25f
@@ -81,7 +71,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		var plane = new GridPlane( World );
 
 		plane.FadeRadius = 8192f;
-		plane.GridSize = 128f;
+		plane.GridSize = 64f;
 	}
 
 	protected override void RestoreDefaultDockLayout()
@@ -89,6 +79,33 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		base.RestoreDefaultDockLayout();
 
 		RebuildUI();
+	}
+
+	public void MarkChanged( SurfMap.SupportBracket bracket )
+	{
+		MarkChanged();
+
+		foreach ( var attachment in bracket.Attachments )
+		{
+			MarkChanged( attachment );
+		}
+	}
+
+	public void MarkChanged( SurfMap.BracketAttachment attachment )
+	{
+		MarkChanged();
+
+		foreach ( var track in attachment.TrackSections )
+		{
+			MarkChanged( track );
+		}
+	}
+
+	public void MarkChanged( SurfMap.TrackSection track )
+	{
+		MarkChanged();
+
+		track.UpdateModel();
 	}
 
 	public void MarkChanged()
@@ -122,6 +139,8 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 	private void Save()
 	{
+		Map.Save( Target );
+
 		Asset.SaveToMemory( Target );
 		Asset.SaveToDisk( Target );
 

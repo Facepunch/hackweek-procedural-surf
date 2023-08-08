@@ -1,0 +1,162 @@
+{
+  "SupportBrackets": [
+    {
+      "Position": "-1728,-1216,512",
+      "Yaw": 112.5,
+      "Roll": 65
+    },
+    {
+      "Position": "-1792,1024,1024",
+      "Yaw": 45,
+      "Roll": 60,
+      "Id": 1
+    },
+    {
+      "Position": "2048,-2048,832",
+      "Yaw": -157.5,
+      "Roll": 50,
+      "Id": 2
+    },
+    {
+      "Position": "3392,1472,512",
+      "Yaw": -90,
+      "Roll": 50,
+      "Id": 3
+    },
+    {
+      "Position": "2112,2816,960",
+      "Yaw": -45,
+      "Roll": 45,
+      "Id": 4
+    },
+    {
+      "Position": "3520,768,512",
+      "Yaw": -67.5,
+      "Roll": 50,
+      "Id": 5
+    },
+    {
+      "Position": "3136,-960,832",
+      "Yaw": -112.5,
+      "Roll": 70,
+      "Id": 6
+    },
+    {
+      "Position": "448,3584,1408",
+      "Yaw": 22.5,
+      "Roll": 60,
+      "Id": 7
+    },
+    {
+      "Position": "-960,2688,1024",
+      "Yaw": 45,
+      "Roll": 60,
+      "Id": 8
+    }
+  ],
+  "BracketAttachments": [
+    {
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256
+    },
+    {
+      "BracketId": 4,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 1
+    },
+    {
+      "BracketId": 8,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 2
+    },
+    {
+      "BracketId": 5,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 3
+    },
+    {
+      "BracketId": 3,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 4
+    },
+    {
+      "BracketId": 6,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 5
+    },
+    {
+      "BracketId": 2,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 6
+    },
+    {
+      "BracketId": 1,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 7
+    },
+    {
+      "BracketId": 7,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 8
+    }
+  ],
+  "TrackSections": [
+    {
+      "EndId": 7,
+      "Material": "materials/surf/track_default.vmat"
+    },
+    {
+      "StartId": 8,
+      "EndId": 1,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 1
+    },
+    {
+      "StartId": 1,
+      "EndId": 4,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 2
+    },
+    {
+      "StartId": 3,
+      "EndId": 5,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 3
+    },
+    {
+      "StartId": 5,
+      "EndId": 6,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 4
+    },
+    {
+      "StartId": 7,
+      "EndId": 2,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 5
+    },
+    {
+      "StartId": 2,
+      "EndId": 8,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 6
+    }
+  ]
+}

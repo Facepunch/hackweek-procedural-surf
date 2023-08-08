@@ -20,7 +20,7 @@ namespace Sandbox;
 /// </summary>
 public partial class MyGame : GameManager
 {
-	public SurfMap Map { get; set; } = ResourceLibrary.Get<SurfMap>( "ramps/example.surf" );
+	public SurfMapAsset Map { get; set; } = ResourceLibrary.Get<SurfMapAsset>( "ramps/example.surf" );
 
 	public MyGame()
 	{
