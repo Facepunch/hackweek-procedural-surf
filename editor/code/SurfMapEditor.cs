@@ -60,7 +60,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 	private void SetupWorld()
 	{
-		_ = new SceneSunLight( World, Rotation.From( -80f, 30f, 0f ), Color.White * 6.0f + Color.Cyan * 1.0f )
+		_ = new SceneSunLight( World, Rotation.From( 60f, 30f, 0f ), Color.White * 6.0f + Color.Cyan * 1.0f )
 		{
 			ShadowsEnabled = true,
 			SkyColor = Color.White * 0.15f + Color.Cyan * 0.25f
