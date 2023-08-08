@@ -41,56 +41,18 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 	{
 		Target = map;
 
-		if ( Target.Ramps == null )
+		if ( Target.IsUninitialized )
 		{
-			Target.Ramps = new List<SurfMap.Ramp>
-			{
-				new()
-				{
-					Nodes = new List<SurfMap.Node>
-					{
-						new()
-						{
-							Position = new Vector3( 0f, 0f, 0f ),
-							Width = 384f,
-							Height = 256f,
-							Tangent = 128f
-						},
+			var supportA = Target.AddSupportBracket();
+			var supportB = Target.AddSupportBracket();
 
-						new()
-						{
-							Position = new Vector3( 1024f, 0f, 0f ),
-							Width = 384f,
-							Height = 256f,
-							Tangent = 128f
-						},
+			supportA.Position = new Vector3( -1024f, 0f, 512f );
+			supportB.Position = new Vector3( 1024f, 0f, 512f );
 
-						new()
-						{
-							Position = new Vector3( 2048f, 0f, 0f ),
-							Width = 384f,
-							Height = 256f,
-							Tangent = 128f
-						},
+			var attachA = Target.AddBracketAttachment( supportA );
+			var attachB = Target.AddBracketAttachment( supportB );
 
-						new()
-						{
-							Position = new Vector3( 1024f * 3f, 0f, 0f ),
-							Width = 384f,
-							Height = 256f,
-							Tangent = 128f
-						},
-
-						new()
-						{
-							Position = new Vector3( 4096f, 0f, 0f ),
-							Width = 384f,
-							Height = 256f,
-							Tangent = 128f
-						}
-					}
-				}
-			};
+			Target.AddTrackSection( attachA, attachB );
 		}
 
 		SetWindowIcon( Asset.AssetType.Icon128 );
@@ -157,6 +119,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		var vp = new Viewport( this );
 		DockManager.AddDock( null, vp );
 	}
+
 	private void Save()
 	{
 		Asset.SaveToMemory( Target );

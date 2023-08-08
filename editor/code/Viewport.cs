@@ -58,88 +58,9 @@ public class Viewport : Frame
 		{
 			Gizmo.Draw.Color = new Color( 1f, 1f, 1f, 0.5f );
 
-			if ( Editor.Target?.Ramps == null )
+			foreach ( var bracket in Editor.Target.SupportBrackets )
 			{
-				return;
-			}
-
-			for ( var i = 0; i < Editor.Target.Ramps.Count; ++i )
-			{
-				var ramp = Editor.Target.Ramps[i];
-
-				if ( ramp.Nodes == null )
-				{
-					ramp.Nodes = new List<SurfMap.Node>();
-				}
-
-				using ( Gizmo.Scope( $"Ramp{i}" ) )
-				{
-					for ( var j = 0; j < ramp.Nodes.Count; ++j)
-					{
-						var node = ramp.Nodes[j];
-
-						using ( Gizmo.Scope( $"Node{j}", node.Position ) )
-						{
-							if ( Scaling )
-							{
-								using ( Gizmo.GizmoControls.PushFixedScale() )
-								{
-									var forward = Rotation.From( node.Pitch, node.Yaw, 0f ).Forward;
-
-									if ( Gizmo.Control.Arrow( "Tangent", forward, out var tangent ) )
-									{
-										node.Tangent += tangent;
-										ramp.Nodes[j] = node;
-										Editor.MarkChanged();
-									}
-								}
-							}
-							else if ( Rotating )
-							{
-								if ( Gizmo.Control.Rotate( "Rotation", new Angles( node.Pitch, node.Yaw, 0f ), out var newAngles ) )
-								{
-									node.Pitch = Math.Clamp( newAngles.pitch, -80f, 80f );
-									node.Yaw = newAngles.yaw;
-									ramp.Nodes[j] = node;
-									Editor.MarkChanged();
-								}
-							}
-							else
-							{
-								if ( Gizmo.Control.Position( "Position", node.Position, out var newPos, Rotation.From( node.Pitch, node.Yaw, 0f ) ) )
-								{
-									node.Position = newPos;
-									ramp.Nodes[j] = node;
-									Editor.MarkChanged();
-								}
-							}
-						}
-					}
-
-					for ( var j = 0; j <= (ramp.Nodes.Count - 1) * 16; ++j )
-					{
-						var index = j / 16f;
-
-						var prev = ramp.Nodes[Math.Clamp( (int)MathF.Floor( index ), 0, ramp.Nodes.Count - 1 )];
-						var next = ramp.Nodes[Math.Clamp( (int)MathF.Ceiling( index ), 0, ramp.Nodes.Count - 1 )];
-
-						var t = index - MathF.Floor( index );
-
-						var node = Node.CubicBeizer( in prev, in next, t );
-
-						var rotation = Rotation.From( node.Pitch, node.Yaw, 0f );
-						var forward = rotation.Forward;
-						var right = Vector3.Cross( forward, new Vector3( 0f, 0f, 1f ) ).Normal;
-						var up = Vector3.Cross( right, forward ).Normal;
-
-						var top = node.Position;
-						var bl = top - up * node.Height - right * node.Width * 0.5f;
-						var br = bl + right * node.Width;
-
-						Gizmo.Draw.Line( top, bl );
-						Gizmo.Draw.Line( top, br );
-					}
-				}
+				Gizmo.Draw.Line( bracket.Position.WithZ( 0f ), bracket.Position );
 			}
 		}
 	}
