@@ -60,14 +60,8 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 
 	private void SetupWorld()
 	{
-		_ = new SceneSunLight( World, Rotation.From( 60f, 30f, 0f ), Color.White * 6.0f + Color.Cyan * 1.0f )
-		{
-			ShadowsEnabled = true,
-			SkyColor = Color.White * 0.15f + Color.Cyan * 0.25f
-		};
+		_ = new SceneMap( World, "maps/surfmapthing" );
 
-		_ = new SceneSkyBox( World, Material.Load( "materials/skybox/light_test_default.vmat" ) );
-		_ = new SceneCubemap( World, Texture.Load( "textures/cubemaps/default.vtex" ), BBox.FromPositionAndSize( Vector3.Zero, 1000 ) );
 		var plane = new GridPlane( World );
 
 		plane.FadeRadius = 8192f;
