@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Sandbox.Internal;
 
 namespace Sandbox.Surf;
 
@@ -20,7 +21,7 @@ partial class SurfMap
 			_updateModelTask = UpdateModelAsync();
 		}
 
-		private record struct TrackStartEnd( Vector3 Position, float Yaw, float Roll, float Min, float Max, float TangentScale );
+		private record struct TrackStartEnd( Vector3 Position, Angles Angles, float Min, float Max, float TangentScale );
 
 		[StructLayout( LayoutKind.Sequential )]
 		private record struct Vertex( Vector3 Position, Vector3 Normal, Vector4 Tangent, Vector2 TexCoord )
@@ -42,10 +43,10 @@ partial class SurfMap
 
 		private async Task UpdateModelAsync()
 		{
-			var start = new TrackStartEnd( Start.Bracket.Position, Start.Bracket.Yaw, Start.Bracket.Roll,
+			var start = new TrackStartEnd( Start.Bracket.Position, Start.Bracket.Angles,
 				Start.Min, Start.Max, Start.TangentScale );
 
-			var end = new TrackStartEnd( End.Bracket.Position, End.Bracket.Yaw, End.Bracket.Roll,
+			var end = new TrackStartEnd( End.Bracket.Position, End.Bracket.Angles,
 				End.Min, End.Max, End.TangentScale );
 
 			try
@@ -77,8 +78,8 @@ partial class SurfMap
 
 			var dist = (end.Position - start.Position).Length;
 
-			var startRot = Rotation.From( 0f, start.Yaw, start.Roll );
-			var endRot = Rotation.From( 0f, end.Yaw, end.Roll );
+			var startRot = SupportBracket.RotationFromAngles( start.Angles );
+			var endRot = SupportBracket.RotationFromAngles( end.Angles );
 
 			var p0 = start.Position;
 			var p1 = start.Position + startRot.Forward * dist * start.TangentScale;
@@ -92,13 +93,28 @@ partial class SurfMap
 				var t = i * dt;
 
 				var pos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
-				var roll = MathX.Lerp( start.Roll, end.Roll, t );
 
-				var prev = Vector3.CubicBeizer( p0, p3, p1, p2, t - dt * 0.5f );
-				var next = Vector3.CubicBeizer( p0, p3, p1, p2, t + dt * 0.5f );
+				Rotation rotation;
 
-				var forward = (next - prev).Normal;
-				var rotation = Rotation.LookAt( forward ) * Rotation.FromRoll( roll );
+				if ( i == 0 )
+				{
+					rotation = startRot;
+				}
+				else if ( i == segments )
+				{
+					rotation = endRot;
+				}
+				else
+				{
+					var roll = MathX.Lerp( start.Angles.roll, end.Angles.roll, t );
+
+					var prev = Vector3.CubicBeizer( p0, p3, p1, p2, t - dt * 0.5f );
+					var next = Vector3.CubicBeizer( p0, p3, p1, p2, t + dt * 0.5f );
+
+					var forward = (next - prev).Normal;
+					rotation = Rotation.LookAt( forward ) * Rotation.FromRoll( roll );
+				}
+
 				var right = rotation.Right;
 				var up = rotation.Up;
 

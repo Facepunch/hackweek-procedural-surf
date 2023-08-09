@@ -20,7 +20,7 @@ public class Viewport : Frame
 	private bool _rotatePressed;
 
 	private Vector3 _dragOffset;
-	private float _rotateOffset;
+	private Angles _rotateOffset;
 	private bool _dragStarted;
 
 	public Viewport( SurfMapEditor editor ) : base( null )
@@ -83,7 +83,7 @@ public class Viewport : Frame
 				case EditMode.Move:
 				{
 					Gizmo.Draw.Color = Gizmo.Colors.Green;
-					if ( Gizmo.Control.Arrow( "Height", Vector3.Up, out var dist, bracket.Position.z ) )
+					if ( Arrow( "Height", Vector3.Up, out var dist, bracket.Position.z, girth: 64f, headLength: 48f ) )
 					{
 						_dragOffset.z += dist;
 
@@ -117,8 +117,7 @@ public class Viewport : Frame
 								var cloneForward = Vector3.Dot( bracket.Rotation.Forward, snappedOffset ) >= 0f;
 
 								clone.Position = bracket.Position;
-								clone.Yaw = bracket.Yaw;
-								clone.Roll = bracket.Roll;
+								clone.Angles = bracket.Angles;
 
 								foreach ( var attachment in bracket.Attachments.ToArray() )
 								{
@@ -184,39 +183,27 @@ public class Viewport : Frame
 
 				case EditMode.Rotate:
 				{
-					using ( Gizmo.GizmoControls.PushFixedScale( 1f ) )
+					using var bracketTopScope = Gizmo.Scope( "Top", new Vector3( 0f, 0f, bracket.Position.z ) );
+						
+					if ( Rotate( "Rotation", bracket.Angles, out var delta ) )
 					{
-						if ( Gizmo.Control.RotateSingle( "Yaw", Rotation.FromPitch( 90f ), Gizmo.Colors.Blue, out var yawDelta ) )
+						_rotateOffset += delta;
+
+						var snappedRotation = new Angles( MathF.Round( _rotateOffset.pitch / 5f ) * 5f,
+							MathF.Round( _rotateOffset.yaw / 22.5f ) * 22.5f,
+							MathF.Round( _rotateOffset.roll / 5f ) * 5f );
+
+						if ( snappedRotation != Angles.Zero )
 						{
-							_rotateOffset += yawDelta.Yaw();
+							_rotateOffset -= snappedRotation;
 
-							var snappedOffset = MathF.Round( _rotateOffset / rotateSnapSize ) * rotateSnapSize;
+							var newRot = bracket.Angles + snappedRotation;
 
-							if ( snappedOffset != 0f )
-							{
-								bracket.Yaw += snappedOffset;
-								_rotateOffset -= snappedOffset;
-								Editor.MarkChanged( bracket );
-							}
-						}
-					}
+							newRot.pitch = Math.Clamp( newRot.pitch, -45f, 45f );
+							newRot.roll = Math.Clamp( newRot.roll, -80f, 80f );
 
-					using var bracketTopScope = Gizmo.Scope( "Top", new Vector3( 0f, 0f, bracket.Position.z ), Rotation.FromYaw( bracket.Yaw ) );
-
-					using ( Gizmo.GizmoControls.PushFixedScale( 1f ) )
-					{
-						if ( Gizmo.Control.RotateSingle( "Roll", Rotation.Identity, Gizmo.Colors.Red, out var rollDelta ) )
-						{
-							_rotateOffset += rollDelta.Roll();
-
-							var snappedOffset = MathF.Round( _rotateOffset / 5f ) * 5f;
-
-							if ( snappedOffset != 0f )
-							{
-								bracket.Roll = Math.Clamp( bracket.Roll + snappedOffset, -85f, 85f );
-								_rotateOffset -= snappedOffset;
-								Editor.MarkChanged( bracket );
-							}
+							bracket.Angles = newRot;
+							Editor.MarkChanged( bracket );
 						}
 					}
 				}
@@ -227,7 +214,7 @@ public class Viewport : Frame
 		foreach ( var attachment in Editor.Map.BracketAttachments )
 		{
 			var bracket = attachment.Bracket;
-			var tangent = Rotation.From( 0f, bracket.Yaw, bracket.Roll ).Right;
+			var tangent = bracket.Rotation.Right;
 
 			Gizmo.Draw.Line( bracket.Position + tangent * attachment.Min, bracket.Position + tangent * attachment.Max );
 		}
@@ -235,7 +222,7 @@ public class Viewport : Frame
 		if ( !Application.MouseButtons.HasFlag( MouseButtons.Left ) )
 		{
 			_dragOffset = 0f;
-			_rotateOffset = 0f;
+			_rotateOffset = Angles.Zero;
 			_dragStarted = false;
 		}
 	}
@@ -307,6 +294,110 @@ public class Viewport : Frame
 				self.ControlMode = "mouse";
 				Application.AllowShortcuts = true;
 			}
+		}
+	}
+
+	/// <summary>
+	/// Draw an arrow - return move delta if interacted with
+	/// </summary>
+	public static bool Arrow( string name, Vector3 axis, out float distance, float length = 24.0f, float girth = 6.0f, float headLength = 4f, float axisOffset = 2.0f, float cullAngle = 10.0f, float snapSize = 0.0f, string head = "cone" )
+	{
+		distance = 0;
+
+		var angle = Vector3.GetAngle( axis, Gizmo.Transform.NormalToLocal( Camera.Rotation.Forward ) );
+
+		if ( angle < cullAngle || angle > 180.0f - cullAngle )
+			return false;
+
+		var localCam = Gizmo.Transform.RotationToLocal( Camera.Rotation );
+
+		// Use the camera to provide a plane that'll work for us
+		var rot = Rotation.LookAt( axis, Vector3.Up );
+
+		using var x = Sandbox.Gizmo.Scope( name, axis * axisOffset, rot );
+
+		girth *= 0.5f;
+
+		Sandbox.Gizmo.Hitbox.BBox( new BBox( new Vector3( 0, -girth, -girth ), new Vector3( length, girth, girth ) ) );
+
+		if ( !Sandbox.Gizmo.IsHovered ) Sandbox.Gizmo.Draw.Color = Sandbox.Gizmo.Draw.Color.Darken( 0.1f );
+
+		Sandbox.Gizmo.Draw.LineThickness = 2f;
+
+
+		var lineLength = length;
+
+		if ( snapSize > 0 )
+		{
+			lineLength = lineLength.SnapToGrid( snapSize );
+		}
+
+		// not pressed, no movement
+		Sandbox.Gizmo.Draw.Line( 0, Vector3.Forward * (lineLength - headLength) );
+
+		if ( head == "cone" )
+		{
+			Sandbox.Gizmo.Draw.SolidCone( Vector3.Forward * (lineLength - headLength), Vector3.Forward * headLength, headLength * 0.33f );
+		}
+
+		if ( head == "box" )
+		{
+			Sandbox.Gizmo.Draw.SolidBox( new BBox( Vector3.Forward * (lineLength - headLength), headLength * 0.5f ) );
+		}
+
+		if ( !Sandbox.Gizmo.IsPressed )
+			return false;
+
+		// use a plane that follows the axis but that uses the camera's plane
+		Gizmo.Transform = Gizmo.Transform.WithRotation( Rotation.LookAt( Gizmo.Transform.Rotation.Forward, Camera.Rotation.Forward ) );
+
+
+		//
+		// Get the delta between trace hits against a plane
+		//
+		var delta = Sandbox.Gizmo.GetMouseDelta( Vector3.Zero, Vector3.Up );
+
+		distance = Vector3.Forward.Dot( delta );
+
+		// restrict movement to the axis direction
+		return distance != 0.0f;
+
+	}
+
+	public static bool Rotate( string name, Angles value, out Angles outDelta )
+	{
+		using ( Gizmo.GizmoControls.PushFixedScale() )
+		{
+			outDelta = default;
+			var flag = false;
+
+			Gizmo.Draw.IgnoreDepth = true;
+
+			if ( Gizmo.Control.RotateSingle( "yaw", Rotation.LookAt( Vector3.Up ), Gizmo.Colors.Yaw, out var deltaYaw ) )
+			{
+				outDelta.yaw += deltaYaw.Yaw();
+				flag = true;
+			}
+
+			using ( Gizmo.Scope( name, Vector3.Zero, Rotation.FromYaw( value.yaw ) ) )
+			{
+				if ( Gizmo.Control.RotateSingle( "pitch", Rotation.LookAt( Vector3.Right ), Gizmo.Colors.Pitch,
+					    out var deltaPitch ) )
+				{
+					outDelta.pitch += deltaPitch.Pitch();
+					flag = true;
+				}
+
+				using ( Gizmo.Scope( name, Vector3.Zero, Rotation.FromPitch( value.pitch ) ) )
+				{
+					if ( Gizmo.Control.RotateSingle( "roll", Rotation.LookAt( Vector3.Forward ), Gizmo.Colors.Roll, out var deltaRoll ) )
+					{
+						outDelta.roll += deltaRoll.Roll();
+						flag = true;
+					}
+				}
+			}
+			return flag;
 		}
 	}
 }

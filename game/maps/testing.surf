@@ -1,61 +1,51 @@
 {
   "SupportBrackets": [
     {
-      "Position": "-1728,-1216,512",
-      "Yaw": 112.5,
-      "Roll": 65
+      "Position": "1536,-3200,512"
     },
     {
-      "Position": "-1984,1088,1024",
-      "Yaw": 45,
-      "Roll": 60,
+      "Position": "-2304,896,1024",
       "Id": 1
     },
     {
-      "Position": "2048,-2048,832",
-      "Yaw": -157.5,
-      "Roll": 50,
+      "Position": "512,-2048,512",
       "Id": 2
     },
     {
-      "Position": "3392,1472,512",
-      "Yaw": -90,
-      "Roll": 50,
+      "Position": "3008,-2752,960",
+      "Angles": "45,-135,55",
       "Id": 3
     },
     {
-      "Position": "2112,2816,960",
-      "Yaw": -45,
-      "Roll": 45,
+      "Position": "3264,1920,2368",
+      "Angles": "0,-45,45",
       "Id": 4
     },
     {
       "Position": "-768,4672,512",
-      "Yaw": -67.5,
-      "Roll": 50,
       "Id": 5
     },
     {
-      "Position": "1408,1152,576",
-      "Yaw": -67.5,
-      "Roll": 45,
+      "Position": "1408,1088,576",
       "Id": 6
     },
     {
       "Position": "448,3584,1408",
-      "Yaw": 22.5,
-      "Roll": 30,
+      "Angles": "0,0,65",
       "Id": 7
     },
     {
-      "Position": "-960,2688,1024",
-      "Yaw": 45,
-      "Roll": 60,
+      "Position": "-1024,2944,960",
       "Id": 8
+    },
+    {
+      "Position": "-1664,-2048,512",
+      "Id": 9
     }
   ],
   "BracketAttachments": [
     {
+      "BracketId": 9,
       "TangentScale": 0.5,
       "Min": -256,
       "Max": 256
@@ -115,6 +105,12 @@
       "Min": -256,
       "Max": 256,
       "Id": 8
+    },
+    {
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 9
     }
   ],
   "TrackSections": [
@@ -157,6 +153,11 @@
       "EndId": 8,
       "Material": "materials/surf/track_default.vmat",
       "Id": 6
+    },
+    {
+      "StartId": 9,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 7
     }
   ]
 }

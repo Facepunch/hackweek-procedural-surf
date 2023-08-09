@@ -32,11 +32,16 @@ public partial class SurfMap
 
 	public class SupportBracket : MapElement
 	{
-		public Vector3 Position { get; set; } = new Vector3( 0f, 0f, 512f );
-		public float Yaw { get; set; }
-		public float Roll { get; set; } = 50f;
+		public static Rotation RotationFromAngles( Angles angles )
+		{
+			return Rotation.From( angles.pitch, angles.yaw, 0f ) * Rotation.FromRoll( angles.roll );
+		}
 
-		public Rotation Rotation => Rotation.From( 0f, Yaw, Roll );
+		public Vector3 Position { get; set; } = new Vector3( 0f, 0f, 512f );
+
+		public Angles Angles { get; set; }
+
+		public Rotation Rotation => RotationFromAngles( Angles );
 
 		public List<BracketAttachment> Attachments { get; } = new List<BracketAttachment>();
 	}
@@ -251,7 +256,7 @@ public partial class SurfMap
 			_supportBrackets.Add( bracket.Id,
 				new SupportBracket
 				{
-					Id = bracket.Id, World = World, Position = bracket.Position, Roll = bracket.Roll, Yaw = bracket.Yaw
+					Id = bracket.Id, World = World, Position = bracket.Position, Angles = bracket.Angles,
 				} );
 			_nextSupportBracketId = Math.Max( _nextSupportBracketId, bracket.Id + 1 );
 		}
@@ -297,8 +302,7 @@ public partial class SurfMap
 		{
 			Id = x.Id,
 			Position = x.Position,
-			Roll = x.Roll,
-			Yaw = x.Yaw
+			Angles = x.Angles,
 		} ).ToList();
 
 		asset.BracketAttachments = BracketAttachments.Select( x => new SurfMapAsset.BracketAttachment

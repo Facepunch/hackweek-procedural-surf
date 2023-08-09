@@ -16,8 +16,7 @@ public partial class SurfMapAsset : GameResource
 	public class SupportBracket : MapElement
 	{
 		public Vector3 Position { get; set; } = new Vector3( 0f, 0f, 512f );
-		public float Yaw { get; set; }
-		public float Roll { get; set; } = 50f;
+		public Angles Angles { get; set; }
 	}
 
 	public class BracketAttachment : MapElement
