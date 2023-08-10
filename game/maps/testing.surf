@@ -1,170 +1,96 @@
 {
   "SupportBrackets": [
     {
-      "Position": "1536,-3200,512",
-      "Angles": "0,180,35"
+      "Position": "512,256,1856",
+      "Angles": "45,0,50"
     },
     {
-      "Position": "-2688,832,1024",
-      "Angles": "0,67.5,55",
+      "Position": "4992,576,960",
+      "Angles": "0,45,50",
       "Id": 1
     },
     {
-      "Position": "576,-2048,896",
-      "Angles": "40,-135,65",
-      "Id": 2
-    },
-    {
-      "Position": "3008,-2752,960",
-      "Angles": "45,-135,55",
-      "Id": 3
-    },
-    {
-      "Position": "3264,1920,2432",
-      "Angles": "0,-67.5,65",
-      "Id": 4
-    },
-    {
-      "Position": "-768,4672,512",
-      "Angles": "0,-45,50",
-      "Id": 5
-    },
-    {
-      "Position": "1472,960,1152",
-      "Angles": "10,-67.5,30",
-      "Id": 6
-    },
-    {
-      "Position": "640,3776,1536",
+      "Position": "2048,256,1088",
       "Angles": "0,0,50",
       "Id": 7
     },
     {
-      "Position": "-960,3008,1024",
-      "Angles": "0,45,80",
-      "Id": 8
+      "Position": "3968,256,960",
+      "Angles": "0,0,50",
+      "Id": 16
     },
     {
-      "Position": "-1920,-2624,512",
-      "Angles": "0,157.5,50",
-      "Id": 9
+      "Position": "2880,704,960",
+      "Angles": "0,-45,50",
+      "Id": 13
     }
   ],
   "BracketAttachments": [
     {
-      "BracketId": 9,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256
-    },
-    {
-      "BracketId": 4,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 1
-    },
-    {
-      "BracketId": 8,
       "TangentScale": 0.5,
       "Min": -256,
       "Max": 256,
       "Id": 2
-    },
-    {
-      "BracketId": 5,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 3
-    },
-    {
-      "BracketId": 3,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 4
-    },
-    {
-      "BracketId": 6,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 5
-    },
-    {
-      "BracketId": 2,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 6
-    },
-    {
-      "BracketId": 1,
-      "TangentScale": 0.5,
-      "Min": -256,
-      "Max": 256,
-      "Id": 7
     },
     {
       "BracketId": 7,
       "TangentScale": 0.5,
       "Min": -256,
       "Max": 256,
-      "Id": 8
+      "Id": 3
     },
     {
+      "BracketId": 1,
       "TangentScale": 0.5,
       "Min": -256,
       "Max": 256,
-      "Id": 9
+      "Id": 17
+    },
+    {
+      "BracketId": 13,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 11
+    },
+    {
+      "BracketId": 16,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 14
     }
   ],
   "TrackSections": [
     {
-      "EndId": 7,
-      "Material": "materials/surf/track_default.vmat"
-    },
-    {
-      "StartId": 8,
-      "EndId": 1,
-      "Material": "materials/surf/track_default.vmat",
-      "Id": 1
-    },
-    {
-      "StartId": 1,
-      "EndId": 4,
-      "Material": "materials/surf/track_default.vmat",
-      "Id": 2
-    },
-    {
-      "StartId": 3,
-      "EndId": 5,
-      "Material": "materials/surf/track_default.vmat",
-      "Id": 3
-    },
-    {
-      "StartId": 5,
-      "EndId": 6,
+      "StartId": 2,
+      "EndId": 3,
       "Material": "materials/surf/track_default.vmat",
       "Id": 4
     },
     {
-      "StartId": 7,
-      "EndId": 2,
+      "StartId": 14,
+      "EndId": 17,
       "Material": "materials/surf/track_default.vmat",
+      "Id": 18
+    },
+    {
+      "StartId": 11,
+      "EndId": 14,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 15
+    }
+  ],
+  "SpawnPlatforms": [
+    {
+      "Position": "0,0,2240",
       "Id": 5
-    },
+    }
+  ],
+  "Checkpoints": [
     {
-      "StartId": 2,
-      "EndId": 8,
-      "Material": "materials/surf/track_default.vmat",
+      "Position": "5632,-64,896",
       "Id": 6
-    },
-    {
-      "StartId": 9,
-      "Material": "materials/surf/track_default.vmat",
-      "Id": 7
     }
   ]
 }

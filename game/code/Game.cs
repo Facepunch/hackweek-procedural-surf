@@ -18,12 +18,57 @@ namespace Sandbox;
 /// You can use this to create things like HUDs and declare which player class
 /// to use for spawned players.
 /// </summary>
-public partial class MyGame : GameManager
+public partial class SurfGame : GameManager
 {
-	public SurfMapAsset Map { get; set; } = ResourceLibrary.Get<SurfMapAsset>( "ramps/example.surf" );
+	public new static SurfGame Current => GameManager.Current as SurfGame;
 
-	public MyGame()
+	[Net]
+	public SurfMapAsset MapAsset { get; set; }
+
+	public SurfMap Map { get; set; }
+
+	private SurfMapAsset _loadedMapAsset;
+	private int _loadedMapChangeIndex;
+
+	[GameEvent.Entity.PostSpawn]
+	private void ServerPostSpawn()
 	{
+		MapAsset = ResourceLibrary.Get<SurfMapAsset>( "maps/testing.surf" );
+	}
+
+	[GameEvent.Tick.Server]
+	private void ServerTick()
+	{
+		SharedTick();
+	}
+
+	[GameEvent.Tick.Client]
+	private void ClientTick()
+	{
+		SharedTick();
+	}
+
+	private void SharedTick()
+	{
+		if ( Map == null && MapAsset != null )
+		{
+			Map = new SurfMap( Game.SceneWorld, Game.PhysicsWorld.Body );
+		}
+
+		if ( Map != null )
+		{
+			var changeIndex = MapAsset?.ChangeIndex ?? 0;
+
+			if ( _loadedMapAsset != MapAsset || _loadedMapChangeIndex != changeIndex )
+			{
+				_loadedMapAsset = MapAsset;
+				_loadedMapChangeIndex = changeIndex;
+
+				Map.Load( MapAsset );
+			}
+
+			Map.UpdateChangedElements();
+		}
 	}
 
 	/// <summary>
@@ -34,21 +79,8 @@ public partial class MyGame : GameManager
 		base.ClientJoined( client );
 
 		// Create a pawn for this client to play with
-		var pawn = new Pawn();
+		var pawn = new Surfer();
 		client.Pawn = pawn;
-
-		// Get all of the spawnpoints
-		var spawnpoints = Entity.All.OfType<SpawnPoint>();
-
-		// chose a random one
-		var randomSpawnPoint = spawnpoints.OrderBy( x => Guid.NewGuid() ).FirstOrDefault();
-
-		// if it exists, place the pawn there
-		if ( randomSpawnPoint != null )
-		{
-			var tx = randomSpawnPoint.Transform;
-			tx.Position = tx.Position + Vector3.Up * 50.0f; // raise it up
-			pawn.Transform = tx;
-		}
+		pawn.Respawn();
 	}
 }
