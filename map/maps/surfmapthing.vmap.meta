@@ -18,7 +18,8 @@
       "PackageReferences": [],
       "EditorReferences": [
         "facepunch.floor_grass_wetdirt_blend_a#18652",
-        "facepunch.plastic_glossy_a_hs#28966"
+        "facepunch.plastic_glossy_a_hs#28966",
+        "facepunch.strafe"
       ],
       "Metadata": {
         "SingleAssetSource": "maps/surfmapthing.vmap"

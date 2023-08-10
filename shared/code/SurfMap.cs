@@ -608,7 +608,7 @@ public partial class SurfMap
 		element.Removed();
 	}
 
-	public void Load( SurfMapAsset asset )
+	public void Clear()
 	{
 		foreach ( var elem in Elements.ToArray() )
 		{
@@ -620,6 +620,11 @@ public partial class SurfMap
 
 		_nextElementId = 0;
 		_elements.Clear();
+	}
+
+	public void Load( SurfMapAsset asset )
+	{
+		Clear();
 
 		if ( asset == null )
 		{
@@ -632,9 +637,9 @@ public partial class SurfMap
 			var supportB = AddSupportBracket();
 
 			supportA.Angles = new Angles( 0f, 0f, 50f );
-			supportA.Position = new Vector3( 512f, 0f, 512f );
+			supportA.Position = new Vector3( 512f, 0f, 1024f );
 			supportB.Angles = new Angles( 0f, 0f, 50f );
-			supportB.Position = new Vector3( 2048f, 0f, 512f );
+			supportB.Position = new Vector3( 2048f, 0f, 1024f );
 
 			var attachA = AddBracketAttachment( supportA );
 			var attachB = AddBracketAttachment( supportB );
@@ -643,8 +648,8 @@ public partial class SurfMap
 
 			track.Material = DefaultTrackMaterial;
 
-			AddSpawnPlatform().Position = new Vector3( 0f, 0f, 1024f );
-			AddCheckpoint().Position = new Vector3( 2048f + 512f, 0f, 768f );
+			AddSpawnPlatform().Position = new Vector3( 0f, 0f, 1024f + 512f );
+			AddCheckpoint().Position = new Vector3( 2048f + 512f, 0f, 768f + 512f );
 		}
 		else
 		{
