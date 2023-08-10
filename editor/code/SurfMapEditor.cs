@@ -33,6 +33,13 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		SetupWorld();
 	}
 
+	public override void OnDestroyed()
+	{
+		base.OnDestroyed();
+
+		World.Delete();
+	}
+
 	public void AssetOpen( Asset asset )
 	{
 		Asset = asset;
