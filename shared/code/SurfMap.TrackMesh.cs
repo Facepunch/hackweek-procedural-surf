@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Sandbox.Internal;
+using static Sandbox.ParticleSnapshot;
 
 namespace Sandbox.Surf;
 
@@ -50,7 +51,7 @@ partial class SurfMap
 		[ThreadStatic]
 		private static List<int> TempCollisionIndices;
 
-		private record struct CrossSectionVertex( float Anchor, Vector2 Offset, Vector2 Normal, float TexCoord );
+		private record struct CrossSectionVertex( float Anchor, Vector2 Offset, Vector2 Normal, float TexCoord, bool FanOrigin = false );
 
 		private const float TerminusLength = 128f;
 		private const float SkirtLength = 64f;
@@ -110,8 +111,8 @@ partial class SurfMap
 			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -SkirtLength ), new Vector2( -1f, 0f ), 1f );
 			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -Thickness ), new Vector2( -1f, 0f ), 1f - texCoordMargin );
 
-			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -Thickness ), new Vector2( 0f, -1f ), 1f - texCoordMargin );
-			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -Thickness ), new Vector2( 0f, -1f ), texCoordMargin );
+			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -Thickness ), new Vector2( 0f, -1f ), 1f - texCoordMargin, true );
+			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -Thickness ), new Vector2( 0f, -1f ), texCoordMargin, true );
 		}
 
 		private async Task UpdateModelAsync()
@@ -173,6 +174,7 @@ partial class SurfMap
 			// Estimate track section length
 
 			var startPos = start.Terminus ? p0 + -startRot.Forward * TerminusLength : p0;
+			var endPos = end.Terminus ? p3 + endRot.Forward * TerminusLength : p3;
 
 			var length = 0f;
 			var prevPos = p0;
@@ -299,6 +301,74 @@ partial class SurfMap
 				AddQuad( collisionIndices, index + 1, index + 3, index + 5, index + 7 );
 				AddQuad( collisionIndices, index + 3, index + 2, index + 7, index + 6 );
 				AddQuad( collisionIndices, index + 2, index + 0, index + 6, index + 4 );
+			}
+
+			static void GenerateEndCap( List<Vertex> renderVerts, List<int> renderIndices, CrossSectionVertex[] crossSection, Vector3 pos, Rotation rot, float min, float max, bool flip )
+			{
+				var indexOffset = renderVerts.Count;
+				var leftFanCenterIndex = 0;
+				var rightFanCenterIndex = 0;
+				var firstRightIndex = -1;
+
+				foreach ( var vertex in crossSection )
+				{
+					var right = rot.Right;
+					var up = rot.Up;
+
+					var along = MathX.Lerp( min, max, vertex.Anchor );
+					var vertPos = pos + right * (vertex.Offset.x + along) + up * vertex.Offset.y;
+
+					if ( vertex.FanOrigin )
+					{
+						if ( vertex.Anchor < 0.5f ) leftFanCenterIndex = renderVerts.Count;
+						else rightFanCenterIndex = renderVerts.Count;
+					}
+
+					if ( vertex.Anchor >= 0.5f && firstRightIndex == -1 )
+					{
+						firstRightIndex = renderVerts.Count;
+					}
+
+					renderVerts.Add( new Vertex( vertPos, rot.Forward * (flip ? 1f : -1f),
+						new Vector4( right, 1f ), new Vector2( along / (max - min), vertex.Offset.y * 0.125f ) ) );
+				}
+
+				var prevVertex = crossSection[^1];
+				var prevIndex = crossSection.Length - 1;
+
+				for ( var i = 0; i < crossSection.Length; ++i )
+				{
+					var nextVertex = crossSection[i];
+
+					if ( prevVertex.FanOrigin && nextVertex.FanOrigin )
+					{
+						renderIndices.Add( leftFanCenterIndex );
+						renderIndices.Add( flip ? firstRightIndex : rightFanCenterIndex );
+						renderIndices.Add( flip ? rightFanCenterIndex : firstRightIndex );
+					}
+					else if ( !prevVertex.FanOrigin && !nextVertex.FanOrigin )
+					{
+						renderIndices.Add( prevVertex.Anchor < 0.5f ? leftFanCenterIndex : rightFanCenterIndex );
+						renderIndices.Add( indexOffset + (flip ? prevIndex : i) );
+						renderIndices.Add( indexOffset + (flip ? i : prevIndex) );
+					}
+
+					prevVertex = nextVertex;
+					prevIndex = i;
+				}
+			}
+
+			if ( start.Terminus )
+			{
+				AddQuad( collisionIndices, 0, 1, 2, 3 );
+				GenerateEndCap( renderVerts, renderIndices, crossSection, startPos, startRot, start.Min, start.Max, false );
+			}
+
+			if ( end.Terminus )
+			{
+				var lastFaceIndex = collisionVerts.Count - 4;
+				AddQuad( collisionIndices, lastFaceIndex + 1, lastFaceIndex + 0, lastFaceIndex + 3, lastFaceIndex + 2 );
+				GenerateEndCap( renderVerts, renderIndices, crossSection, endPos, endRot, start.Min, start.Max, true );
 			}
 
 			var newMesh = _mesh == null;
