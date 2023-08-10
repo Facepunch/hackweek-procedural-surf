@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sandbox.Diagnostics;
 
 namespace Sandbox.Surf;
 
@@ -11,8 +12,40 @@ public partial class SurfMap
 		public int Id { get; init; }
 		public bool IsValid { get; private set; } = true;
 
-		public SceneWorld World { get; init; }
+		public SurfMap Map { get; init; }
+		public SceneWorld World => Map?.World;
 		public SceneObject SceneObject { get; protected set; }
+
+		public void Created()
+		{
+			OnCreated();
+		}
+
+		protected virtual void OnCreated()
+		{
+
+		}
+
+		public void Changed()
+		{
+			Map._changedElements.Add( this );
+			OnChanged();
+		}
+
+		protected virtual void OnChanged()
+		{
+
+		}
+
+		public void Update()
+		{
+			OnUpdate();
+		}
+
+		protected virtual void OnUpdate()
+		{
+
+		}
 
 		public void Removed()
 		{
@@ -44,6 +77,22 @@ public partial class SurfMap
 		public Rotation Rotation => RotationFromAngles( Angles );
 
 		public List<BracketAttachment> Attachments { get; } = new List<BracketAttachment>();
+
+		protected override void OnChanged()
+		{
+			foreach ( var attachment in Attachments )
+			{
+				attachment.Changed();
+			}
+		}
+
+		protected override void OnRemoved()
+		{
+			foreach ( var attachment in Attachments.ToArray() )
+			{
+				Map.Remove( attachment );
+			}
+		}
 	}
 
 	public class BracketAttachment : MapElement
@@ -73,8 +122,21 @@ public partial class SurfMap
 
 		public List<TrackSection> TrackSections { get; } = new List<TrackSection>();
 
+		protected override void OnChanged()
+		{
+			foreach ( var track in TrackSections )
+			{
+				track.Changed();
+			}
+		}
+
 		protected override void OnRemoved()
 		{
+			foreach ( var track in TrackSections.ToArray() )
+			{
+				Map.Remove( track );
+			}
+
 			if ( _bracket.IsValid() )
 			{
 				_bracket.Attachments.Remove( this );
@@ -124,6 +186,14 @@ public partial class SurfMap
 
 		public Material Material { get; set; }
 
+		protected override void OnUpdate()
+		{
+			if ( Start.IsValid() && End.IsValid() )
+			{
+				UpdateModel();
+			}
+		}
+
 		protected override void OnRemoved()
 		{
 			if ( _start.IsValid() )
@@ -141,13 +211,44 @@ public partial class SurfMap
 		}
 	}
 
-	private int _nextSupportBracketId;
-	private int _nextBracketAttachmentId;
-	private int _nextTrackSectionId;
+	public partial class SpawnPlatform : MapElement
+	{
+		public Vector3 Position { get; set; }
+		public float Yaw { get; set; }
 
-	private readonly Dictionary<int, SupportBracket> _supportBrackets = new Dictionary<int, SupportBracket>();
-	private readonly Dictionary<int, BracketAttachment> _bracketAttachments = new Dictionary<int, BracketAttachment>();
-	private readonly Dictionary<int, TrackSection> _trackSections = new Dictionary<int, TrackSection>();
+		protected override void OnCreated()
+		{
+			SceneObject = new SceneObject( World, "models/surf/spawn_platform.vmdl" );
+		}
+
+		protected override void OnUpdate()
+		{
+			SceneObject.Position = Position;
+			SceneObject.Rotation = Rotation.FromYaw( Yaw );
+		}
+	}
+
+	public partial class Checkpoint : MapElement
+	{
+		public Vector3 Position { get; set; }
+		public Angles Angles { get; set; }
+
+		protected override void OnCreated()
+		{
+			SceneObject = new SceneObject( World, "models/surf/checkpoint.vmdl" );
+		}
+
+		protected override void OnUpdate()
+		{
+			SceneObject.Position = Position;
+			SceneObject.Rotation = Rotation.From( Angles );
+		}
+	}
+
+	private int _nextElementId;
+
+	private readonly Dictionary<int, MapElement> _elements = new();
+	private readonly HashSet<MapElement> _changedElements = new();
 
 	public SceneWorld World { get; }
 	public Material DefaultTrackMaterial { get; set; } = Material.Load( "materials/surf/track_default.vmat" );
@@ -157,28 +258,38 @@ public partial class SurfMap
 		World = world;
 	}
 
-	public IEnumerable<SupportBracket> SupportBrackets => _supportBrackets.Values;
+	public IEnumerable<MapElement> Elements => _elements.Values;
 
-	public IEnumerable<BracketAttachment> BracketAttachments => _bracketAttachments.Values;
+	public IEnumerable<SupportBracket> SupportBrackets => Elements.OfType<SupportBracket>();
 
-	public IEnumerable<TrackSection> TrackSections => _trackSections.Values;
+	public IEnumerable<BracketAttachment> BracketAttachments => Elements.OfType<BracketAttachment>();
 
-	private T AddElement<T>( Dictionary<int, T> dict, ref int nextId )
+	public IEnumerable<TrackSection> TrackSections => Elements.OfType<TrackSection>();
+
+	public IEnumerable<SpawnPlatform> SpawnPlatforms => Elements.OfType<SpawnPlatform>();
+
+	public IEnumerable<Checkpoint> Checkpoints => Elements.OfType<Checkpoint>();
+
+	private T AddElement<T>()
 		where T : MapElement, new()
 	{
-		var elem = new T { Id = nextId++, World = World };
-		dict.Add( elem.Id, elem );
+		var elem = new T { Id = _nextElementId++, Map = this };
+		_elements.Add( elem.Id, elem );
+
+		elem.Created();
+		elem.Changed();
+
 		return elem;
 	}
 
 	public SupportBracket AddSupportBracket()
 	{
-		return AddElement( _supportBrackets, ref _nextSupportBracketId );
+		return AddElement<SupportBracket>();
 	}
 
 	public BracketAttachment AddBracketAttachment( SupportBracket bracket )
 	{
-		var attachment = AddElement( _bracketAttachments, ref _nextBracketAttachmentId );
+		var attachment = AddElement<BracketAttachment>();
 
 		attachment.Bracket = bracket;
 
@@ -187,7 +298,7 @@ public partial class SurfMap
 
 	public TrackSection AddTrackSection( BracketAttachment start, BracketAttachment end )
 	{
-		var track = AddElement( _trackSections, ref _nextTrackSectionId );
+		var track = AddElement<TrackSection>();
 
 		track.Start = start;
 		track.End = end;
@@ -195,51 +306,39 @@ public partial class SurfMap
 		return track;
 	}
 
-	public void RemoveSupportBracket( SupportBracket bracket )
+	public SpawnPlatform AddSpawnPlatform()
 	{
-		_supportBrackets.Remove( bracket.Id );
-		bracket.Removed();
-
-		foreach ( var attachment in bracket.Attachments.ToArray() )
-		{
-			RemoveBracketAttachment( attachment );
-		}
+		return AddElement<SpawnPlatform>();
 	}
 
-	public void RemoveBracketAttachment( BracketAttachment attachment )
+	public Checkpoint AddCheckpoint()
 	{
-		_bracketAttachments.Remove( attachment.Id );
-		attachment.Removed();
-
-		foreach ( var track in attachment.TrackSections.ToArray() )
-		{
-			RemoveTrackSection( track );
-		}
+		return AddElement<Checkpoint>();
 	}
 
-	public void RemoveTrackSection( TrackSection track )
+	public void Remove<T>( T element )
+		where T : MapElement
 	{
-		_trackSections.Remove( track.Id );
-		track.Removed();
+		Assert.AreEqual( _elements[element.Id], element );
+
+		_elements.Remove( element.Id );
+		element.Removed();
 	}
 
 	public void Load( SurfMapAsset asset )
 	{
-		_nextSupportBracketId = 0;
-		_nextBracketAttachmentId = 0;
-		_nextTrackSectionId = 0;
-
-		_supportBrackets.Clear();
-		_bracketAttachments.Clear();
-		_trackSections.Clear();
+		_nextElementId = 0;
+		_elements.Clear();
 
 		if ( asset.IsUninitialized )
 		{
 			var supportA = AddSupportBracket();
 			var supportB = AddSupportBracket();
 
-			supportA.Position = new Vector3( -1024f, 0f, 512f );
-			supportB.Position = new Vector3( 1024f, 0f, 512f );
+			supportA.Angles = new Angles( 0f, 0f, 50f );
+			supportA.Position = new Vector3( 512f, 0f, 512f );
+			supportB.Angles = new Angles( 0f, 0f, 50f );
+			supportB.Position = new Vector3( 2048f, 0f, 512f );
 
 			var attachA = AddBracketAttachment( supportA );
 			var attachB = AddBracketAttachment( supportB );
@@ -248,52 +347,106 @@ public partial class SurfMap
 
 			track.Material = DefaultTrackMaterial;
 
-			return;
+			AddSpawnPlatform().Position = new Vector3( 0f, 0f, 1024f );
+			AddCheckpoint().Position = new Vector3( 2048f + 512f, 0f, 768f );
+		}
+		else
+		{
+			foreach ( var bracket in asset.SupportBrackets )
+			{
+				_elements.Add( bracket.Id,
+					new SupportBracket
+					{
+						Id = bracket.Id,
+						Map = this,
+						Position = bracket.Position,
+						Angles = bracket.Angles,
+					} );
+			}
+
+			foreach ( var attachment in asset.BracketAttachments )
+			{
+				_elements.Add( attachment.Id,
+					new BracketAttachment
+					{
+						Id = attachment.Id,
+						Map = this,
+						Bracket = _elements[attachment.BracketId] as SupportBracket,
+						TangentScale = attachment.TangentScale,
+						Min = attachment.Min,
+						Max = attachment.Max
+					} );
+			}
+
+			foreach ( var track in asset.TrackSections )
+			{
+				_elements.Add( track.Id,
+					new TrackSection
+					{
+						Id = track.Id,
+						Map = this,
+						Start = _elements[track.StartId] as BracketAttachment,
+						End = _elements[track.EndId] as BracketAttachment,
+						Material = track.Material
+					} );
+			}
+
+			foreach ( var spawnPlatform in asset.SpawnPlatforms )
+			{
+				_elements.Add( spawnPlatform.Id,
+					new SpawnPlatform
+					{
+						Id = spawnPlatform.Id,
+						Map = this,
+						Position = spawnPlatform.Position,
+						Yaw = spawnPlatform.Yaw
+					} );
+			}
+
+			foreach ( var checkpoint in asset.Checkpoints )
+			{
+				_elements.Add( checkpoint.Id,
+					new Checkpoint
+					{
+						Id = checkpoint.Id,
+						Map = this,
+						Position = checkpoint.Position,
+						Angles = checkpoint.Angles
+					} );
+			}
+
+			_nextElementId = _elements.Count == 0 ? 0 : _elements.Max( x => x.Key ) + 1;
+
+			foreach ( var elem in Elements )
+			{
+				elem.Created();
+			}
 		}
 
-		foreach ( var bracket in asset.SupportBrackets )
+		foreach ( var elem in Elements )
 		{
-			_supportBrackets.Add( bracket.Id,
-				new SupportBracket
-				{
-					Id = bracket.Id, World = World, Position = bracket.Position, Angles = bracket.Angles,
-				} );
-			_nextSupportBracketId = Math.Max( _nextSupportBracketId, bracket.Id + 1 );
+			elem.Changed();
 		}
 
-		foreach ( var attachment in asset.BracketAttachments )
+		UpdateChangedElements();
+	}
+
+	public bool UpdateChangedElements()
+	{
+		if ( _changedElements.Count == 0 )
 		{
-			_bracketAttachments.Add( attachment.Id,
-				new BracketAttachment
-				{
-					Id = attachment.Id,
-					World = World,
-					Bracket = _supportBrackets[attachment.BracketId],
-					TangentScale = attachment.TangentScale,
-					Min = attachment.Min,
-					Max = attachment.Max
-				} );
-			_nextBracketAttachmentId = Math.Max( _nextBracketAttachmentId, attachment.Id + 1 );
+			return false;
 		}
 
-		foreach ( var track in asset.TrackSections )
+		var changed = _changedElements.ToArray();
+		_changedElements.Clear();
+
+		foreach ( var elem in changed )
 		{
-			_trackSections.Add( track.Id,
-				new TrackSection
-				{
-					Id = track.Id,
-					World = World,
-					Start = _bracketAttachments[track.StartId],
-					End = _bracketAttachments[track.EndId],
-					Material = track.Material
-				} );
-			_nextTrackSectionId = Math.Max( _nextTrackSectionId, track.Id + 1 );
+			elem.Update();
 		}
 
-		foreach ( var track in _trackSections )
-		{
-			track.Value.UpdateModel();
-		}
+		return true;
 	}
 
 	public void Save( SurfMapAsset asset )
@@ -317,6 +470,16 @@ public partial class SurfMap
 		asset.TrackSections = TrackSections.Select( x => new SurfMapAsset.TrackSection
 		{
 			Id = x.Id, StartId = x.Start.Id, EndId = x.End.Id, Material = x.Material
+		} ).ToList();
+
+		asset.SpawnPlatforms = SpawnPlatforms.Select( x => new SurfMapAsset.SpawnPlatform
+		{
+			Id = x.Id, Position = x.Position, Yaw = x.Yaw
+		} ).ToList();
+
+		asset.Checkpoints = Checkpoints.Select( x => new SurfMapAsset.Checkpoint
+		{
+			Id = x.Id, Position = x.Position, Angles = x.Angles
 		} ).ToList();
 	}
 }

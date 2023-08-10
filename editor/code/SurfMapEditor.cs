@@ -75,33 +75,6 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 		RebuildUI();
 	}
 
-	public void MarkChanged( SurfMap.SupportBracket bracket )
-	{
-		MarkChanged();
-
-		foreach ( var attachment in bracket.Attachments )
-		{
-			MarkChanged( attachment );
-		}
-	}
-
-	public void MarkChanged( SurfMap.BracketAttachment attachment )
-	{
-		MarkChanged();
-
-		foreach ( var track in attachment.TrackSections )
-		{
-			MarkChanged( track );
-		}
-	}
-
-	public void MarkChanged( SurfMap.TrackSection track )
-	{
-		MarkChanged();
-
-		track.UpdateModel();
-	}
-
 	public void MarkChanged()
 	{
 		if ( HasUnsavedChanges ) return;

@@ -94,7 +94,7 @@ public class Viewport : Frame
 							_dragOffset.z -= snappedOffset;
 
 							bracket.Position = bracket.Position.WithZ( bracket.Position.z + snappedOffset );
-							Editor.MarkChanged( bracket );
+							bracket.Changed();
 						}
 					}
 
@@ -170,12 +170,12 @@ public class Viewport : Frame
 									}
 								}
 
-								Editor.MarkChanged( clone );
+								clone.Changed();
 							}
 
 							_dragStarted = true;
 							bracket.Position += snappedOffset;
-							Editor.MarkChanged( bracket );
+							bracket.Changed();
 						}
 					}
 				}
@@ -203,7 +203,7 @@ public class Viewport : Frame
 							newRot.roll = Math.Clamp( newRot.roll, -80f, 80f );
 
 							bracket.Angles = newRot;
-							Editor.MarkChanged( bracket );
+							bracket.Changed();
 						}
 					}
 				}
@@ -217,6 +217,11 @@ public class Viewport : Frame
 			var tangent = bracket.Rotation.Right;
 
 			Gizmo.Draw.Line( bracket.Position + tangent * attachment.Min, bracket.Position + tangent * attachment.Max );
+		}
+
+		if ( Editor.Map.UpdateChangedElements() )
+		{
+			Editor.MarkChanged();
 		}
 
 		if ( !Application.MouseButtons.HasFlag( MouseButtons.Left ) )

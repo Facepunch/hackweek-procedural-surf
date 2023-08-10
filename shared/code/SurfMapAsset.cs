@@ -33,11 +33,25 @@ public partial class SurfMapAsset : GameResource
 		public int EndId { get; set; }
 		public Material Material { get; set; }
 	}
+
+	public class SpawnPlatform : MapElement
+	{
+		public Vector3 Position { get; set; }
+		public float Yaw { get; set; }
+	}
+
+	public class Checkpoint : MapElement
+	{
+		public Vector3 Position { get; set; }
+		public Angles Angles { get; set; }
+	}
 	
 	public List<SupportBracket> SupportBrackets { get; set; }
 	public List<BracketAttachment> BracketAttachments { get; set; }
 	public List<TrackSection> TrackSections { get; set; }
+	public List<SpawnPlatform> SpawnPlatforms { get; set; }
+	public List<Checkpoint> Checkpoints { get; set; }
 
 	[JsonIgnore]
-	public bool IsUninitialized => SupportBrackets == null || BracketAttachments == null || TrackSections == null;
+	public bool IsUninitialized => SupportBrackets == null || BracketAttachments == null || TrackSections == null || SpawnPlatforms == null || Checkpoints == null;
 }
