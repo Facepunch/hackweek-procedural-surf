@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Sandbox;
 
-partial class Pawn : AnimatedEntity
+partial class Surfer : AnimatedEntity
 {
 	/// <summary>
 	/// Called when the entity is first created 
@@ -26,6 +26,17 @@ partial class Pawn : AnimatedEntity
 	// An example BuildInput method within a player's Pawn class.
 	[ClientInput] public Vector3 InputDirection { get; protected set; }
 	[ClientInput] public Angles ViewAngles { get; set; }
+
+	public void Respawn()
+	{
+		var platforms = SurfGame.Current.Map.SpawnPlatforms.ToArray();
+		var platform = platforms[Random.Shared.Next( 0, platforms.Length )];
+
+		if ( platform != null )
+		{
+			Transform = new Transform( platform.Position + Vector3.Up * 64f, Rotation.FromYaw( platform.Yaw ) );
+		}
+	}
 
 	public override void BuildInput()
 	{

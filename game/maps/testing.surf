@@ -1,26 +1,26 @@
 {
   "SupportBrackets": [
     {
-      "Position": "512,256,1088",
+      "Position": "512,256,1856",
       "Angles": "45,0,50"
     },
     {
-      "Position": "4992,576,512",
+      "Position": "4992,576,960",
       "Angles": "0,45,50",
       "Id": 1
     },
     {
-      "Position": "2048,256,512",
+      "Position": "2048,256,1088",
       "Angles": "0,0,50",
       "Id": 7
     },
     {
-      "Position": "3968,256,512",
+      "Position": "3968,256,960",
       "Angles": "0,0,50",
       "Id": 16
     },
     {
-      "Position": "2880,704,512",
+      "Position": "2880,704,960",
       "Angles": "0,-45,50",
       "Id": 13
     }
@@ -83,13 +83,13 @@
   ],
   "SpawnPlatforms": [
     {
-      "Position": "0,0,1408",
+      "Position": "0,0,2240",
       "Id": 5
     }
   ],
   "Checkpoints": [
     {
-      "Position": "5632,-64,832",
+      "Position": "5632,-64,896",
       "Id": 6
     }
   ]
