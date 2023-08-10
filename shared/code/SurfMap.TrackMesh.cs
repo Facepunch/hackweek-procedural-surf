@@ -13,6 +13,8 @@ partial class SurfMap
 	{
 		private Task _updateModelTask = Task.CompletedTask;
 		private Mesh _mesh;
+		private SceneObject _sceneObject;
+		private PhysicsShape _physicsShape;
 
 		public void UpdateModel()
 		{
@@ -313,17 +315,17 @@ partial class SurfMap
 
 			await GameTask.MainThread();
 
-			if ( SceneObject == null )
+			if ( _sceneObject == null )
 			{
 				var model = new ModelBuilder()
 					.AddMesh( _mesh )
 					.Create();
 
-				SceneObject = new SceneObject( SceneWorld, model );
+				_sceneObject = AddSceneObject( model );
 			}
 			else if ( newMesh )
 			{
-				SceneObject.Model = new ModelBuilder()
+				_sceneObject.Model = new ModelBuilder()
 					.AddMesh( _mesh )
 					.Create();
 			}
@@ -333,13 +335,13 @@ partial class SurfMap
 				return;
 			}
 
-			if ( PhysicsShape == null )
+			if ( _physicsShape == null )
 			{
-				PhysicsShape = PhysicsBody.AddMeshShape( collisionVerts, collisionIndices );
+				_physicsShape = AddMeshShape( collisionVerts, collisionIndices );
 			}
 			else
 			{
-				PhysicsShape.UpdateMesh( collisionVerts, collisionIndices );
+				_physicsShape.UpdateMesh( collisionVerts, collisionIndices );
 			}
 		}
 	}

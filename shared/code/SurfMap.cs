@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Sandbox.Diagnostics;
 
@@ -15,6 +16,83 @@ public partial class SurfMap
 		void Changed();
 	}
 
+	public class MapModel
+	{
+		private readonly Entity _entity;
+		private readonly SceneObject _sceneObject;
+
+		public MapModel( Entity entity )
+		{
+			_entity = entity;
+			_sceneObject = null;
+		}
+
+		public MapModel( SceneObject sceneObject )
+		{
+			_sceneObject = sceneObject;
+			_entity = null;
+		}
+
+		public void Delete()
+		{
+			_entity?.Delete();
+			_sceneObject?.Delete();
+		}
+
+		public Transform Transform
+		{
+			get => _entity?.Transform ?? _sceneObject?.Transform ?? Transform.Zero;
+			set
+			{
+				if ( _entity != null )
+				{
+					_entity.Transform = value;
+				}
+
+				if ( _sceneObject != null )
+				{
+					_sceneObject.Transform = value;
+				}
+			}
+		} 
+	}
+
+	public class SupportPillar
+	{
+		private readonly MapElement _owner;
+		private readonly List<MapModel> _pillars = new List<MapModel>();
+
+		public SupportPillar( MapElement owner )
+		{
+			_owner = owner;
+		}
+
+		public void Update( Transform transform )
+		{
+			const float pillarHeight = 512f;
+			const float pillarOffset = 128f;
+
+			var pillarTop = transform.Position - transform.Rotation.Up * pillarOffset;
+			var pillarCount = (int)MathF.Ceiling( (pillarTop.z - pillarOffset) / pillarHeight );
+
+			while ( _pillars.Count > pillarCount )
+			{
+				_pillars[^1].Delete();
+				_pillars.RemoveAt( _pillars.Count - 1 );
+			}
+
+			while ( _pillars.Count < pillarCount )
+			{
+				_pillars.Add( _owner.AddModel( "models/surf_pillars/surf_pillar_connecting_piece_tall.vmdl" ) );
+			}
+
+			for ( var i = 0; i < _pillars.Count; i++ )
+			{
+				_pillars[i].Transform = new Transform( pillarTop.WithZ( pillarTop.z - pillarOffset - (i + 1) * pillarHeight ), Rotation.Identity );
+			}
+		}
+	}
+
 	public class MapElement : IValid
 	{
 		public int Id { get; init; }
@@ -27,9 +105,9 @@ public partial class SurfMap
 
 		public bool IsInGame => PhysicsWorld != null;
 
-		public Entity Entity { get; protected set; }
-		public SceneObject SceneObject { get; protected set; }
-		public PhysicsShape PhysicsShape { get; protected set; }
+		private readonly List<SceneObject> _sceneObjects = new List<SceneObject>();
+		private readonly List<Entity> _entities = new List<Entity>();
+		private readonly List<PhysicsShape> _physicsShapes = new List<PhysicsShape>();
 
 		public void Created()
 		{
@@ -71,14 +149,26 @@ public partial class SurfMap
 
 			IsValid = false;
 
-			Entity?.Delete();
-			Entity = null;
+			foreach ( var entity in _entities )
+			{
+				entity.Delete();
+			}
 
-			SceneObject?.Delete();
-			SceneObject = null;
+			_entities.Clear();
 
-			PhysicsShape?.Remove();
-			PhysicsShape = null;
+			foreach ( var sceneObj in _sceneObjects )
+			{
+				sceneObj.Delete();
+			}
+
+			_sceneObjects.Clear();
+
+			foreach ( var shape in _physicsShapes )
+			{
+				shape.Remove();
+			}
+
+			_physicsShapes.Clear();
 
 			OnRemoved();
 		}
@@ -88,32 +178,52 @@ public partial class SurfMap
 
 		}
 
-		protected void FromModel( string path )
+		protected ModelEntity AddModelEntity( string modelPath )
+		{
+			var ent = new ModelEntity( modelPath );
+			_entities.Add( ent );
+
+			ent.SetupPhysicsFromModel( PhysicsMotionType.Static );
+
+			return ent;
+		}
+
+		protected SceneObject AddSceneObject( Model model )
+		{
+			var obj = new SceneObject( SceneWorld, model );
+			_sceneObjects.Add( obj );
+
+			return obj;
+		}
+
+		protected PhysicsShape AddMeshShape( List<Vector3> vertices, List<int> indices )
+		{
+			var shape = PhysicsBody.AddMeshShape( vertices, indices );
+			_physicsShapes.Add( shape );
+
+			return shape;
+		}
+
+		public MapModel AddModel( string path )
 		{
 			if ( IsInGame )
 			{
-				var ent = new ModelEntity( path );
-
-				ent.SetupPhysicsFromModel( PhysicsMotionType.Static );
-
-				Entity = ent;
+				return new MapModel( AddModelEntity( path ) );
 			}
-			else
-			{
-				SceneObject = new SceneObject( SceneWorld, path );
-			}
+
+			return new MapModel( AddSceneObject( Model.Load( path ) ) );
 		}
 
 		protected void UpdateTransform( Transform transform )
 		{
-			if ( SceneObject != null )
+			foreach ( var sceneObject in _sceneObjects )
 			{
-				SceneObject.Transform = transform;
+				sceneObject.Transform = transform;
 			}
 
-			if ( Entity != null )
+			foreach ( var entity in _entities )
 			{
-				Entity.Transform = transform;
+				entity.Transform = transform;
 			}
 		}
 	}
@@ -144,6 +254,12 @@ public partial class SurfMap
 		public Rotation Rotation => RotationFromAngles( Angles );
 
 		public List<BracketAttachment> Attachments { get; } = new List<BracketAttachment>();
+		private readonly SupportPillar _pillar;
+
+		public SupportBracket()
+		{
+			_pillar = new SupportPillar( this );
+		}
 
 		protected override void OnChanged()
 		{
@@ -151,6 +267,11 @@ public partial class SurfMap
 			{
 				attachment.Changed();
 			}
+		}
+
+		protected override void OnUpdate()
+		{
+			_pillar.Update( new Transform( Position, Rotation ) );
 		}
 
 		protected override void OnRemoved()
@@ -350,7 +471,7 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			FromModel( "models/surf/spawn_platform.vmdl" );
+			AddModel( "models/surf/spawn_platform.vmdl" );
 		}
 
 		protected override void OnUpdate()
@@ -376,7 +497,7 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			FromModel( "models/surf/checkpoint.vmdl" );
+			AddModel( "models/surf/checkpoint.vmdl" );
 		}
 
 		protected override void OnUpdate()
