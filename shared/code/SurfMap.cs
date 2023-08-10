@@ -75,7 +75,7 @@ public partial class SurfMap
 			_socket ??= _owner.AddModel( "models/surf_pillars/surf_pillar_ball_joint_01.vmdl" );
 
 			const float pillarHeight = 512f;
-			const float pillarOffset = 168f;
+			const float pillarOffset = 200f;
 
 			var pillarTop = transform.Position - transform.Rotation.Up * pillarOffset;
 			var pillarCount = (int)MathF.Ceiling( pillarTop.z / pillarHeight );
