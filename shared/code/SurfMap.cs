@@ -61,6 +61,8 @@ public partial class SurfMap
 	{
 		private readonly MapElement _owner;
 		private readonly List<MapModel> _pillars = new List<MapModel>();
+		private MapModel _socket;
+		private MapModel _ball;
 
 		public SupportPillar( MapElement owner )
 		{
@@ -69,11 +71,14 @@ public partial class SurfMap
 
 		public void Update( Transform transform )
 		{
+			_ball ??= _owner.AddModel( "models/surf_pillars/surf_pillar_ball_joint_02.vmdl" );
+			_socket ??= _owner.AddModel( "models/surf_pillars/surf_pillar_ball_joint_01.vmdl" );
+
 			const float pillarHeight = 512f;
-			const float pillarOffset = 128f;
+			const float pillarOffset = 168f;
 
 			var pillarTop = transform.Position - transform.Rotation.Up * pillarOffset;
-			var pillarCount = (int)MathF.Ceiling( (pillarTop.z - pillarOffset) / pillarHeight );
+			var pillarCount = (int)MathF.Ceiling( pillarTop.z / pillarHeight );
 
 			while ( _pillars.Count > pillarCount )
 			{
@@ -88,8 +93,11 @@ public partial class SurfMap
 
 			for ( var i = 0; i < _pillars.Count; i++ )
 			{
-				_pillars[i].Transform = new Transform( pillarTop.WithZ( pillarTop.z - pillarOffset - (i + 1) * pillarHeight ), Rotation.Identity );
+				_pillars[i].Transform = new Transform( pillarTop.WithZ( pillarTop.z - (i + 1) * pillarHeight ) );
 			}
+
+			_socket.Transform = new Transform( pillarTop );
+			_ball.Transform = new Transform( pillarTop + Vector3.Up * 32f, transform.Rotation );
 		}
 	}
 
