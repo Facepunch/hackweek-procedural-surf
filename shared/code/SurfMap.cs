@@ -25,6 +25,9 @@ public partial class SurfMap
 		public PhysicsWorld PhysicsWorld => Map?.PhysicsWorld;
 		public PhysicsBody PhysicsBody => Map?.PhysicsBody;
 
+		public bool IsInGame => PhysicsWorld != null;
+
+		public Entity Entity { get; protected set; }
 		public SceneObject SceneObject { get; protected set; }
 		public PhysicsShape PhysicsShape { get; protected set; }
 
@@ -68,6 +71,9 @@ public partial class SurfMap
 
 			IsValid = false;
 
+			Entity?.Delete();
+			Entity = null;
+
 			SceneObject?.Delete();
 			SceneObject = null;
 
@@ -80,6 +86,35 @@ public partial class SurfMap
 		protected virtual void OnRemoved()
 		{
 
+		}
+
+		protected void FromModel( string path )
+		{
+			if ( IsInGame )
+			{
+				var ent = new ModelEntity( path );
+
+				ent.SetupPhysicsFromModel( PhysicsMotionType.Static );
+
+				Entity = ent;
+			}
+			else
+			{
+				SceneObject = new SceneObject( SceneWorld, path );
+			}
+		}
+
+		protected void UpdateTransform( Transform transform )
+		{
+			if ( SceneObject != null )
+			{
+				SceneObject.Transform = transform;
+			}
+
+			if ( Entity != null )
+			{
+				Entity.Transform = transform;
+			}
 		}
 	}
 
@@ -315,13 +350,12 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			SceneObject = new SceneObject( SceneWorld, "models/surf/spawn_platform.vmdl" );
+			FromModel( "models/surf/spawn_platform.vmdl" );
 		}
 
 		protected override void OnUpdate()
 		{
-			SceneObject.Position = Position;
-			SceneObject.Rotation = Rotation.FromYaw( Yaw );
+			UpdateTransform( new Transform( Position, Rotation.FromYaw( Yaw ) ) );
 		}
 
 		public IMapElement Clone( Vector3 direction )
@@ -342,13 +376,12 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			SceneObject = new SceneObject( SceneWorld, "models/surf/checkpoint.vmdl" );
+			FromModel( "models/surf/checkpoint.vmdl" );
 		}
 
 		protected override void OnUpdate()
 		{
-			SceneObject.Position = Position;
-			SceneObject.Rotation = Rotation.From( Angles );
+			UpdateTransform( new Transform( Position, Rotation.From( Angles ) ) );
 		}
 
 		public IMapElement Clone( Vector3 direction )
