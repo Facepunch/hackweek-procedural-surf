@@ -54,4 +54,12 @@ public partial class SurfMapAsset : GameResource
 
 	[JsonIgnore]
 	public bool IsUninitialized => SupportBrackets == null || BracketAttachments == null || TrackSections == null || SpawnPlatforms == null || Checkpoints == null;
+
+	[JsonIgnore]
+	public int ChangeIndex { get; private set; }
+
+	protected override void PostReload()
+	{
+		++ChangeIndex;
+	}
 }

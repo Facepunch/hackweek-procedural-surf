@@ -20,10 +20,53 @@ namespace Sandbox;
 /// </summary>
 public partial class MyGame : GameManager
 {
-	public SurfMapAsset Map { get; set; } = ResourceLibrary.Get<SurfMapAsset>( "ramps/example.surf" );
+	[Net]
+	public SurfMapAsset MapAsset { get; set; }
 
-	public MyGame()
+	public SurfMap Map { get; set; }
+
+	private SurfMapAsset _loadedMapAsset;
+	private int _loadedMapChangeIndex;
+
+	[GameEvent.Entity.PostSpawn]
+	private void ServerPostSpawn()
 	{
+		MapAsset = ResourceLibrary.Get<SurfMapAsset>( "maps/testing.surf" );
+	}
+
+	[GameEvent.Tick.Server]
+	private void ServerTick()
+	{
+		SharedTick();
+	}
+
+	[GameEvent.Tick.Client]
+	private void ClientTick()
+	{
+		SharedTick();
+	}
+
+	private void SharedTick()
+	{
+		if ( Map == null && MapAsset != null )
+		{
+			Map = new SurfMap( Game.SceneWorld );
+		}
+
+		if ( Map != null )
+		{
+			var changeIndex = MapAsset?.ChangeIndex ?? 0;
+
+			if ( _loadedMapAsset != MapAsset || _loadedMapChangeIndex != changeIndex )
+			{
+				_loadedMapAsset = MapAsset;
+				_loadedMapChangeIndex = changeIndex;
+
+				Map.Load( MapAsset );
+			}
+
+			Map.UpdateChangedElements();
+		}
 	}
 
 	/// <summary>

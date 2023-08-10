@@ -437,8 +437,21 @@ public partial class SurfMap
 
 	public void Load( SurfMapAsset asset )
 	{
+		foreach ( var elem in Elements.ToArray() )
+		{
+			if ( elem.IsValid )
+			{
+				Remove( elem );
+			}
+		}
+
 		_nextElementId = 0;
 		_elements.Clear();
+
+		if ( asset == null )
+		{
+			return;
+		}
 
 		if ( asset.IsUninitialized )
 		{

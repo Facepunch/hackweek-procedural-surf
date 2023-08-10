@@ -103,6 +103,7 @@ public class Viewport : Frame
 
 			Gizmo.Draw.IgnoreDepth = true;
 			Gizmo.Draw.Color = Gizmo.Colors.Green;
+
 			if ( Arrow( "Height", Vector3.Up, out var heightDelta, element.Position.z, girth: 64f, headLength: 48f ) )
 			{
 				_dragOffset.z += heightDelta;
@@ -113,7 +114,7 @@ public class Viewport : Frame
 				{
 					_dragOffset.z -= snappedOffset;
 
-					element.Position = element.Position.WithZ( element.Position.z + snappedOffset );
+					element.Position = element.Position.WithZ( Math.Max( element.Position.z + snappedOffset, 128f ) );
 					element.Changed();
 				}
 			}
