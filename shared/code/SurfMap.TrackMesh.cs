@@ -215,7 +215,16 @@ partial class SurfMap
 					var next = Vector3.CubicBeizer( p0, p3, p1, p2, t + dt * 0.5f );
 
 					var forward = (next - prev).Normal;
-					rotation = Rotation.LookAt( forward ) * Rotation.FromRoll( roll );
+
+					if ( MathF.Abs( forward.z ) <= 0f )
+					{
+						var yaw = MathF.Atan2( forward.y, forward.x ) * 180f / MathF.PI;
+						rotation = Rotation.FromYaw( yaw ) * Rotation.FromRoll( roll );
+					}
+					else
+					{
+						rotation = Rotation.LookAt( forward ) * Rotation.FromRoll( roll );
+					}
 				}
 
 				var right = rotation.Right;

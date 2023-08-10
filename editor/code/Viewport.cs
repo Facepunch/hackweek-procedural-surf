@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 using Editor;
 
 namespace Sandbox.Surf.Editor;
@@ -50,8 +49,6 @@ public class Viewport : Frame
 		_rotatePressed &= e.Key != KeyCode.R;
 	}
 
-	private readonly List<SurfMap.SupportBracket> _brackets = new List<SurfMap.SupportBracket>();
-
 	[EditorEvent.Frame]
 	private void Frame()
 	{
@@ -71,33 +68,32 @@ public class Viewport : Frame
 
 		using var instScope = Editor.GizmoInstance.Push();
 
-		_brackets.Clear();
-		_brackets.AddRange( Editor.Map.SupportBrackets );
-
-		foreach ( var bracket in _brackets )
+		if ( mode == EditMode.Move )
 		{
-			using var bracketBaseScope = Gizmo.Scope( $"Bracket{bracket.Id}", bracket.Position.WithZ( 0f ) );
+			var posElements = Editor.Map.Elements.OfType<SurfMap.IPositionElement>().ToArray();
 
-			switch ( mode )
+			foreach ( var element in posElements )
 			{
-				case EditMode.Move:
+				using var elemScope = Gizmo.Scope( $"PosElem{element.Id}", element.Position.WithZ( 0f ) );
+
+				Gizmo.Draw.IgnoreDepth = true;
+				Gizmo.Draw.Color = Gizmo.Colors.Green;
+				if ( Arrow( "Height", Vector3.Up, out var heightDelta, element.Position.z, girth: 64f, headLength: 48f ) )
 				{
-					Gizmo.Draw.Color = Gizmo.Colors.Green;
-					if ( Arrow( "Height", Vector3.Up, out var dist, bracket.Position.z, girth: 64f, headLength: 48f ) )
+					_dragOffset.z += heightDelta;
+
+					var snappedOffset = MathF.Round( _dragOffset.z / gridSize ) * gridSize;
+
+					if ( snappedOffset != 0f )
 					{
-						_dragOffset.z += dist;
+						_dragOffset.z -= snappedOffset;
 
-						var snappedOffset = MathF.Round( _dragOffset.z / gridSize ) * gridSize;
-
-						if ( snappedOffset != 0f )
-						{
-							_dragOffset.z -= snappedOffset;
-
-							bracket.Position = bracket.Position.WithZ( bracket.Position.z + snappedOffset );
-							bracket.Changed();
-						}
+						element.Position = element.Position.WithZ( element.Position.z + snappedOffset );
+						element.Changed();
 					}
+				}
 
+				{
 					using var _ = Gizmo.GizmoControls.PushFixedScale( 1f );
 
 					Gizmo.Draw.Color = Gizmo.Colors.Blue;
@@ -113,101 +109,67 @@ public class Viewport : Frame
 
 							if ( cloning && !_dragStarted )
 							{
-								var clone = Editor.Map.AddSupportBracket();
-								var cloneForward = Vector3.Dot( bracket.Rotation.Forward, snappedOffset ) >= 0f;
-
-								clone.Position = bracket.Position;
-								clone.Angles = bracket.Angles;
-
-								foreach ( var attachment in bracket.Attachments.ToArray() )
-								{
-									attachment.Bracket = clone;
-
-									var attachmentClone = Editor.Map.AddBracketAttachment( bracket );
-
-									attachmentClone.Min = attachment.Min;
-									attachmentClone.Max = attachment.Max;
-									attachmentClone.TangentScale = attachment.TangentScale;
-
-									var anyTrackForward = false;
-									var anyTrackBackward = false;
-
-									foreach ( var track in attachment.TrackSections.ToArray() )
-									{
-										if ( track.Start == attachment )
-										{
-											if ( !cloneForward ) continue;
-
-											anyTrackForward = true;
-
-											track.Start = attachmentClone;
-
-											var trackClone = Editor.Map.AddTrackSection( attachment, attachmentClone );
-											trackClone.Material = track.Material;
-										}
-										else
-										{
-											if ( cloneForward ) continue;
-
-											anyTrackBackward = true;
-
-											track.End = attachmentClone;
-
-											var trackClone = Editor.Map.AddTrackSection( attachmentClone, attachment );
-											trackClone.Material = track.Material;
-										}
-									}
-
-									if ( cloneForward && !anyTrackForward )
-									{
-										var track = Editor.Map.AddTrackSection( attachment, attachmentClone );
-										track.Material = attachment.TrackSections.FirstOrDefault()?.Material ?? Editor.Map.DefaultTrackMaterial;
-									}
-									else if ( !cloneForward && !anyTrackBackward )
-									{
-										var track = Editor.Map.AddTrackSection( attachmentClone, attachment );
-										track.Material = attachment.TrackSections.FirstOrDefault()?.Material ?? Editor.Map.DefaultTrackMaterial;
-									}
-								}
-
+								var clone = element.Clone( snappedOffset );
 								clone.Changed();
 							}
 
 							_dragStarted = true;
-							bracket.Position += snappedOffset;
-							bracket.Changed();
+							element.Position += snappedOffset;
+							element.Changed();
 						}
 					}
 				}
-				break;
 
-				case EditMode.Rotate:
+				if ( Application.IsKeyDown( KeyCode.Delete ) && Gizmo.IsChildSelected )
 				{
-					using var bracketTopScope = Gizmo.Scope( "Top", new Vector3( 0f, 0f, bracket.Position.z ) );
-						
-					if ( Rotate( "Rotation", bracket.Angles, out var delta ) )
+					Log.Info( $"Delete {element.Id}!" );
+				}
+			}
+		}
+		else
+		{
+			var anglesElements = Editor.Map.Elements.OfType<SurfMap.IAnglesElement>().ToArray();
+
+			foreach ( var element in anglesElements )
+			{
+				using var elemScope = Gizmo.Scope( $"AnglesElem{element.Id}", element.Position );
+
+				if ( Rotate( "Rotation", element.Angles, out var delta ) )
+				{
+					_rotateOffset += delta;
+
+					var snappedRotation = new Angles( MathF.Round( _rotateOffset.pitch / 5f ) * 5f,
+						MathF.Round( _rotateOffset.yaw / 22.5f ) * 22.5f,
+						MathF.Round( _rotateOffset.roll / 5f ) * 5f );
+
+					if ( snappedRotation != Angles.Zero )
 					{
-						_rotateOffset += delta;
+						_rotateOffset -= snappedRotation;
 
-						var snappedRotation = new Angles( MathF.Round( _rotateOffset.pitch / 5f ) * 5f,
-							MathF.Round( _rotateOffset.yaw / 22.5f ) * 22.5f,
-							MathF.Round( _rotateOffset.roll / 5f ) * 5f );
+						var newRot = element.Angles + snappedRotation;
 
-						if ( snappedRotation != Angles.Zero )
-						{
-							_rotateOffset -= snappedRotation;
+						newRot.pitch = Math.Clamp( newRot.pitch, -45f, 45f );
+						newRot.roll = Math.Clamp( newRot.roll, -80f, 80f );
 
-							var newRot = bracket.Angles + snappedRotation;
-
-							newRot.pitch = Math.Clamp( newRot.pitch, -45f, 45f );
-							newRot.roll = Math.Clamp( newRot.roll, -80f, 80f );
-
-							bracket.Angles = newRot;
-							bracket.Changed();
-						}
+						element.Angles = newRot;
+						element.Changed();
 					}
 				}
-				break;
+			}
+		}
+
+		var attachments = Editor.Map.Elements.OfType<SurfMap.BracketAttachment>().ToArray();
+
+		foreach ( var attachment in attachments )
+		{
+			using var elemScope = Gizmo.Scope( $"Attachment{attachment.Id}", attachment.Bracket.Position, attachment.Bracket.Rotation );
+
+			Gizmo.Draw.Color = Gizmo.Colors.Red;
+			Gizmo.Draw.IgnoreDepth = true;
+			if ( Arrow( "Tangent", Vector3.Forward, out var tangentDelta, 128f + attachment.TangentScale * 256f, girth: 64f, headLength: 48f ) )
+			{
+				attachment.TangentScale = 0.5f; // Math.Clamp( attachment.TangentScale + tangentDelta / 256f, 0f, 0.75f );
+				attachment.Changed();
 			}
 		}
 

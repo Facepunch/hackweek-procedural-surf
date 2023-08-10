@@ -7,6 +7,14 @@ namespace Sandbox.Surf;
 
 public partial class SurfMap
 {
+	public interface IMapElement
+	{
+		int Id { get; }
+		bool IsValid { get; }
+
+		void Changed();
+	}
+
 	public class MapElement : IValid
 	{
 		public int Id { get; init; }
@@ -49,6 +57,11 @@ public partial class SurfMap
 
 		public void Removed()
 		{
+			if ( !IsValid )
+			{
+				return;
+			}
+
 			IsValid = false;
 
 			SceneObject?.Delete();
@@ -63,7 +76,19 @@ public partial class SurfMap
 		}
 	}
 
-	public class SupportBracket : MapElement
+	public interface IPositionElement : IMapElement
+	{
+		Vector3 Position { get; set; }
+
+		IMapElement Clone( Vector3 direction );
+	}
+
+	public interface IAnglesElement : IPositionElement
+	{
+		Angles Angles { get; set; }
+	}
+
+	public class SupportBracket : MapElement, IPositionElement, IAnglesElement
 	{
 		public static Rotation RotationFromAngles( Angles angles )
 		{
@@ -92,6 +117,70 @@ public partial class SurfMap
 			{
 				Map.Remove( attachment );
 			}
+		}
+
+		public IMapElement Clone( Vector3 direction )
+		{
+			var clone = Map.AddSupportBracket();
+			var cloneForward = Vector3.Dot( Rotation.Forward, direction ) >= 0f;
+
+			clone.Position = Position;
+			clone.Angles = Angles;
+
+			foreach ( var attachment in Attachments.ToArray() )
+			{
+				attachment.Bracket = clone;
+
+				var attachmentClone = Map.AddBracketAttachment( this );
+
+				attachmentClone.Min = attachment.Min;
+				attachmentClone.Max = attachment.Max;
+				attachmentClone.TangentScale = attachment.TangentScale;
+
+				var anyTrackForward = false;
+				var anyTrackBackward = false;
+
+				foreach ( var track in attachment.TrackSections.ToArray() )
+				{
+					if ( track.Start == attachment )
+					{
+						if ( !cloneForward ) continue;
+
+						anyTrackForward = true;
+
+						track.Start = attachmentClone;
+
+						var trackClone =
+							Map.AddTrackSection( attachment, attachmentClone );
+						trackClone.Material = track.Material;
+					}
+					else
+					{
+						if ( cloneForward ) continue;
+
+						anyTrackBackward = true;
+
+						track.End = attachmentClone;
+
+						var trackClone =
+							Map.AddTrackSection( attachmentClone, attachment );
+						trackClone.Material = track.Material;
+					}
+				}
+
+				if ( cloneForward && !anyTrackForward )
+				{
+					var track = Map.AddTrackSection( attachment, attachmentClone );
+					track.Material = attachment.TrackSections.FirstOrDefault()?.Material ?? Map.DefaultTrackMaterial;
+				}
+				else if ( !cloneForward && !anyTrackBackward )
+				{
+					var track = Map.AddTrackSection( attachmentClone, attachment );
+					track.Material = attachment.TrackSections.FirstOrDefault()?.Material ?? Map.DefaultTrackMaterial;
+				}
+			}
+
+			return clone;
 		}
 	}
 
@@ -211,9 +300,10 @@ public partial class SurfMap
 		}
 	}
 
-	public partial class SpawnPlatform : MapElement
+	public partial class SpawnPlatform : MapElement, IPositionElement
 	{
 		public Vector3 Position { get; set; }
+
 		public float Yaw { get; set; }
 
 		protected override void OnCreated()
@@ -226,9 +316,19 @@ public partial class SurfMap
 			SceneObject.Position = Position;
 			SceneObject.Rotation = Rotation.FromYaw( Yaw );
 		}
+
+		public IMapElement Clone( Vector3 direction )
+		{
+			var clone = Map.AddSpawnPlatform();
+
+			clone.Position = Position;
+			clone.Yaw = Yaw;
+
+			return clone;
+		}
 	}
 
-	public partial class Checkpoint : MapElement
+	public partial class Checkpoint : MapElement, IPositionElement, IAnglesElement
 	{
 		public Vector3 Position { get; set; }
 		public Angles Angles { get; set; }
@@ -242,6 +342,16 @@ public partial class SurfMap
 		{
 			SceneObject.Position = Position;
 			SceneObject.Rotation = Rotation.From( Angles );
+		}
+
+		public IMapElement Clone( Vector3 direction )
+		{
+			var clone = Map.AddCheckpoint();
+
+			clone.Position = Position;
+			clone.Angles = Angles;
+
+			return clone;
 		}
 	}
 
