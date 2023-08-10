@@ -53,7 +53,6 @@ partial class SurfMap
 		private const float SkirtLength = 64f;
 		private const float Thickness = 16f;
 		private const float OuterCornerRadius = 16f;
-		private static CrossSectionVertex[] CrossSection { get; } = GenerateCrossSection().ToArray();
 
 		private static IEnumerable<(Vector2 Normal, float Along)> QuarterCircle( int segments )
 		{
@@ -72,6 +71,12 @@ partial class SurfMap
 		{
 			var texCoordMargin = 0.125f;
 			var texCoordHalfRounded = (OuterCornerRadius * MathF.PI * 0.25f / SkirtLength) * texCoordMargin;
+
+			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -Thickness ), new Vector2( 1f, 0f ), texCoordMargin );
+			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -SkirtLength ), new Vector2( 1f, 0f ), 0f );
+
+			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -SkirtLength ), new Vector2( 0f, -1f ), 0f );
+			yield return new CrossSectionVertex( 0f, new Vector2( 0f, -SkirtLength ), new Vector2( 0f, -1f ), 0f );
 
 			yield return new CrossSectionVertex( 0f, new Vector2( 0f, -SkirtLength ), new Vector2( -1f, 0f ), 0f );
 			yield return new CrossSectionVertex( 0f, new Vector2( 0f, -OuterCornerRadius ), new Vector2( -1f, 0f ), texCoordMargin - texCoordHalfRounded );
@@ -95,6 +100,15 @@ partial class SurfMap
 
 			yield return new CrossSectionVertex( 1f, new Vector2( 0f, -OuterCornerRadius ), new Vector2( 1f, 0f ), 1f - texCoordMargin + texCoordHalfRounded  );
 			yield return new CrossSectionVertex( 1f, new Vector2( 0f, -SkirtLength ), new Vector2( 1f, 0f ), 1f );
+
+			yield return new CrossSectionVertex( 1f, new Vector2( 0f, -SkirtLength ), new Vector2( 0f, -1f ), 1f );
+			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -SkirtLength ), new Vector2( 0f, -1f ), 1f );
+
+			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -SkirtLength ), new Vector2( -1f, 0f ), 1f );
+			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -Thickness ), new Vector2( -1f, 0f ), 1f - texCoordMargin );
+
+			yield return new CrossSectionVertex( 1f, new Vector2( -Thickness, -Thickness ), new Vector2( 0f, -1f ), 1f - texCoordMargin );
+			yield return new CrossSectionVertex( 0f, new Vector2( Thickness, -Thickness ), new Vector2( 0f, -1f ), texCoordMargin );
 		}
 
 		private async Task UpdateModelAsync()
@@ -138,7 +152,8 @@ partial class SurfMap
 
 			const int segments = 16;
 
-			var crossSectionVertices = CrossSection.Length;
+			var crossSection = GenerateCrossSection().ToArray();
+			var crossSectionVertices = crossSection.Length;
 
 			var dist = (end.Position - start.Position).Length;
 
@@ -214,7 +229,7 @@ partial class SurfMap
 				collisionVerts.Add( nextPos + right * min - up * SkirtLength );
 				collisionVerts.Add( nextPos + right * max - up * SkirtLength );
 
-				foreach ( var vertex in CrossSection )
+				foreach ( var vertex in crossSection )
 				{
 					var vertPos = nextPos + right * (vertex.Offset.x + MathX.Lerp( min, max, vertex.Anchor )) + up * vertex.Offset.y;
 					var normal = (right * vertex.Normal.x + up * vertex.Normal.y).Normal;
@@ -237,10 +252,10 @@ partial class SurfMap
 				indices.Add( i3 );
 			}
 
-			for ( var i = 1; i < CrossSection.Length; i++ )
+			for ( var i = 1; i < crossSection.Length; i++ )
 			{
-				var a = CrossSection[i - 1];
-				var b = CrossSection[i];
+				var a = crossSection[i - 1];
+				var b = crossSection[i];
 
 				if ( Math.Abs( a.Anchor - b.Anchor ) < 0.0001f && a.Offset.AlmostEqual( b.Offset ) )
 				{
