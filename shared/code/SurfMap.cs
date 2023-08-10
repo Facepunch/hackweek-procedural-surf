@@ -88,7 +88,7 @@ public partial class SurfMap
 		Angles Angles { get; set; }
 	}
 
-	public class SupportBracket : MapElement, IPositionElement, IAnglesElement
+	public class SupportBracket : MapElement, IAnglesElement
 	{
 		public static Rotation RotationFromAngles( Angles angles )
 		{

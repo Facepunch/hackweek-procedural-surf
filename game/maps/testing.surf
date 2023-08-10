@@ -1,13 +1,28 @@
 {
   "SupportBrackets": [
     {
-      "Position": "512,256,896",
+      "Position": "512,256,832",
       "Angles": "35,0,50"
+    },
+    {
+      "Position": "4992,576,512",
+      "Angles": "0,45,50",
+      "Id": 1
     },
     {
       "Position": "2048,256,512",
       "Angles": "0,0,50",
-      "Id": 1
+      "Id": 7
+    },
+    {
+      "Position": "3968,256,512",
+      "Angles": "0,0,50",
+      "Id": 16
+    },
+    {
+      "Position": "2880,704,512",
+      "Angles": "0,-45,50",
+      "Id": 13
     }
   ],
   "BracketAttachments": [
@@ -18,11 +33,32 @@
       "Id": 2
     },
     {
-      "BracketId": 1,
+      "BracketId": 7,
       "TangentScale": 0.5,
       "Min": -256,
       "Max": 256,
       "Id": 3
+    },
+    {
+      "BracketId": 1,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 17
+    },
+    {
+      "BracketId": 13,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 11
+    },
+    {
+      "BracketId": 16,
+      "TangentScale": 0.5,
+      "Min": -256,
+      "Max": 256,
+      "Id": 14
     }
   ],
   "TrackSections": [
@@ -31,17 +67,29 @@
       "EndId": 3,
       "Material": "materials/surf/track_default.vmat",
       "Id": 4
+    },
+    {
+      "StartId": 14,
+      "EndId": 17,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 18
+    },
+    {
+      "StartId": 11,
+      "EndId": 14,
+      "Material": "materials/surf/track_default.vmat",
+      "Id": 15
     }
   ],
   "SpawnPlatforms": [
     {
-      "Position": "0,0,1024",
+      "Position": "0,0,1408",
       "Id": 5
     }
   ],
   "Checkpoints": [
     {
-      "Position": "2560,0,768",
+      "Position": "5632,-64,832",
       "Id": 6
     }
   ]
