@@ -50,7 +50,7 @@ public partial class MyGame : GameManager
 	{
 		if ( Map == null && MapAsset != null )
 		{
-			Map = new SurfMap( Game.SceneWorld );
+			Map = new SurfMap( Game.SceneWorld, Game.PhysicsWorld.Body );
 		}
 
 		if ( Map != null )

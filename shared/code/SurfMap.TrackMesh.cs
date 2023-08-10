@@ -319,13 +319,27 @@ partial class SurfMap
 					.AddMesh( _mesh )
 					.Create();
 
-				SceneObject = new SceneObject( World, model );
+				SceneObject = new SceneObject( SceneWorld, model );
 			}
 			else if ( newMesh )
 			{
 				SceneObject.Model = new ModelBuilder()
 					.AddMesh( _mesh )
 					.Create();
+			}
+
+			if ( PhysicsBody == null )
+			{
+				return;
+			}
+
+			if ( PhysicsShape == null )
+			{
+				PhysicsShape = PhysicsBody.AddMeshShape( collisionVerts, collisionIndices );
+			}
+			else
+			{
+				PhysicsShape.UpdateMesh( collisionVerts, collisionIndices );
 			}
 		}
 	}

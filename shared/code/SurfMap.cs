@@ -21,8 +21,12 @@ public partial class SurfMap
 		public bool IsValid { get; private set; } = true;
 
 		public SurfMap Map { get; init; }
-		public SceneWorld World => Map?.World;
+		public SceneWorld SceneWorld => Map?.SceneWorld;
+		public PhysicsWorld PhysicsWorld => Map?.PhysicsWorld;
+		public PhysicsBody PhysicsBody => Map?.PhysicsBody;
+
 		public SceneObject SceneObject { get; protected set; }
+		public PhysicsShape PhysicsShape { get; protected set; }
 
 		public void Created()
 		{
@@ -66,6 +70,9 @@ public partial class SurfMap
 
 			SceneObject?.Delete();
 			SceneObject = null;
+
+			PhysicsShape?.Remove();
+			PhysicsShape = null;
 
 			OnRemoved();
 		}
@@ -308,7 +315,7 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			SceneObject = new SceneObject( World, "models/surf/spawn_platform.vmdl" );
+			SceneObject = new SceneObject( SceneWorld, "models/surf/spawn_platform.vmdl" );
 		}
 
 		protected override void OnUpdate()
@@ -335,7 +342,7 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			SceneObject = new SceneObject( World, "models/surf/checkpoint.vmdl" );
+			SceneObject = new SceneObject( SceneWorld, "models/surf/checkpoint.vmdl" );
 		}
 
 		protected override void OnUpdate()
@@ -360,12 +367,16 @@ public partial class SurfMap
 	private readonly Dictionary<int, MapElement> _elements = new();
 	private readonly HashSet<MapElement> _changedElements = new();
 
-	public SceneWorld World { get; }
+	public SceneWorld SceneWorld { get; }
+	public PhysicsWorld PhysicsWorld => PhysicsBody?.World;
+	public PhysicsBody PhysicsBody { get; }
+
 	public Material DefaultTrackMaterial { get; set; } = Material.Load( "materials/surf/track_default.vmat" );
 
-	public SurfMap( SceneWorld world )
+	public SurfMap( SceneWorld sceneWorld, PhysicsBody physicsBody = null )
 	{
-		World = world;
+		SceneWorld = sceneWorld;
+		PhysicsBody = physicsBody;
 	}
 
 	public IEnumerable<MapElement> Elements => _elements.Values;
