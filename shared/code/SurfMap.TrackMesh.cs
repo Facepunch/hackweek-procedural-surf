@@ -23,7 +23,7 @@ partial class SurfMap
 			_updateModelTask = UpdateModelAsync();
 		}
 
-		private record struct TrackStartEnd( Vector3 Position, Angles Angles, float Min, float Max, float TangentScale );
+		private record struct TrackStartEnd( Vector3 Position, Angles Angles, float Min, float Max, float TangentScale, bool Terminus );
 
 		[StructLayout( LayoutKind.Sequential )]
 		private record struct Vertex( Vector3 Position, Vector3 Normal, Vector4 Tangent, Vector2 TexCoord )
@@ -52,6 +52,7 @@ partial class SurfMap
 
 		private record struct CrossSectionVertex( float Anchor, Vector2 Offset, Vector2 Normal, float TexCoord );
 
+		private const float TerminusLength = 128f;
 		private const float SkirtLength = 64f;
 		private const float Thickness = 16f;
 		private const float OuterCornerRadius = 16f;
@@ -116,10 +117,10 @@ partial class SurfMap
 		private async Task UpdateModelAsync()
 		{
 			var start = new TrackStartEnd( Start.Bracket.Position, Start.Bracket.Angles,
-				Start.Min, Start.Max, Start.TangentScale );
+				Start.Min, Start.Max, Start.TangentScale, Start.TrackSections.Count == 1 );
 
 			var end = new TrackStartEnd( End.Bracket.Position, End.Bracket.Angles,
-				End.Min, End.Max, End.TangentScale );
+				End.Min, End.Max, End.TangentScale, End.TrackSections.Count == 1 );
 
 			try
 			{
@@ -171,10 +172,15 @@ partial class SurfMap
 
 			// Estimate track section length
 
+			var startPos = start.Terminus ? p0 + -startRot.Forward * TerminusLength : p0;
+
 			var length = 0f;
 			var prevPos = p0;
 
-			for ( var i = 1; i <= segments; ++i )
+			var minI = start.Terminus ? -1 : 0;
+			var maxI = end.Terminus ? segments + 1 : segments;
+
+			for ( var i = 1; i <= maxI; ++i )
 			{
 				var t = i * dt;
 				var nextPos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
@@ -186,31 +192,30 @@ partial class SurfMap
 
 			var vScale = Math.Max( 1f, MathF.Round( length / 512f ) ) / length;
 
-			length = 0f;
-			prevPos = p0;
+			length = -(startPos - p0).Length;
+			prevPos = startPos;
 
-			for ( var i = 0; i <= segments; ++i )
+			for ( var i = minI; i <= maxI; ++i )
 			{
+				Rotation rotation;
+				Vector3 nextPos;
+
 				var t = i * dt;
 
-				var nextPos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
-				
-				length += (nextPos - prevPos).Length;
-
-				prevPos = nextPos;
-
-				Rotation rotation;
-
-				if ( i == 0 )
+				if ( i <= 0 )
 				{
 					rotation = startRot;
+					nextPos = p0 + i * startRot.Forward * TerminusLength;
 				}
-				else if ( i == segments )
+				else if ( i >= segments )
 				{
 					rotation = endRot;
+					nextPos = p3 + (i - segments) * endRot.Forward * TerminusLength;
 				}
 				else
 				{
+					nextPos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
+
 					var roll = MathX.Lerp( start.Angles.roll, end.Angles.roll, t );
 
 					var prev = Vector3.CubicBeizer( p0, p3, p1, p2, t - dt * 0.5f );
@@ -228,6 +233,9 @@ partial class SurfMap
 						rotation = Rotation.LookAt( forward ) * Rotation.FromRoll( roll );
 					}
 				}
+
+				length += (nextPos - prevPos).Length;
+				prevPos = nextPos;
 
 				var right = rotation.Right;
 				var up = rotation.Up;
@@ -279,13 +287,13 @@ partial class SurfMap
 				var i2 = i0 + crossSectionVertices;
 				var i3 = i1 + crossSectionVertices;
 
-				for ( int j = 0, index = 0; j < segments; j++, index += crossSectionVertices )
+				for ( int j = minI, index = 0; j < maxI; j++, index += crossSectionVertices )
 				{
 					AddQuad( renderIndices, index + i0, index + i1, index + i2, index + i3 );
 				}
 			}
 
-			for ( int i = 0, index = 0; i < segments; i++, index += 4 )
+			for ( int i = minI, index = 0; i < maxI; i++, index += 4 )
 			{
 				AddQuad( collisionIndices, index + 0, index + 1, index + 4, index + 5 );
 				AddQuad( collisionIndices, index + 1, index + 3, index + 5, index + 7 );
