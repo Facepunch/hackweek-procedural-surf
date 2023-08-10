@@ -152,11 +152,35 @@ partial class SurfMap
 
 			var dt = 1f / segments;
 
+			// Estimate track section length
+
+			var length = 0f;
+			var prevPos = p0;
+
+			for ( var i = 1; i <= segments; ++i )
+			{
+				var t = i * dt;
+				var nextPos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
+
+				length += (nextPos - prevPos).Length;
+
+				prevPos = nextPos;
+			}
+
+			var vScale = Math.Max( 1f, MathF.Round( length / 512f ) ) / length;
+
+			length = 0f;
+			prevPos = p0;
+
 			for ( var i = 0; i <= segments; ++i )
 			{
 				var t = i * dt;
 
-				var pos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
+				var nextPos = Vector3.CubicBeizer( p0, p3, p1, p2, t );
+				
+				length += (nextPos - prevPos).Length;
+
+				prevPos = nextPos;
 
 				Rotation rotation;
 
@@ -185,20 +209,20 @@ partial class SurfMap
 				var min = MathX.Lerp( start.Min, end.Min, t );
 				var max = MathX.Lerp( start.Max, end.Max, t );
 
-				collisionVerts.Add( pos + right * min );
-				collisionVerts.Add( pos + right * max );
-				collisionVerts.Add( pos + right * min - up * SkirtLength );
-				collisionVerts.Add( pos + right * max - up * SkirtLength );
+				collisionVerts.Add( nextPos + right * min );
+				collisionVerts.Add( nextPos + right * max );
+				collisionVerts.Add( nextPos + right * min - up * SkirtLength );
+				collisionVerts.Add( nextPos + right * max - up * SkirtLength );
 
 				foreach ( var vertex in CrossSection )
 				{
-					var vertPos = pos + right * (vertex.Offset.x + MathX.Lerp( min, max, vertex.Anchor )) + up * vertex.Offset.y;
+					var vertPos = nextPos + right * (vertex.Offset.x + MathX.Lerp( min, max, vertex.Anchor )) + up * vertex.Offset.y;
 					var normal = (right * vertex.Normal.x + up * vertex.Normal.y).Normal;
 					var tangent = rotation.Forward;
 
 					renderVerts.Add( new Vertex( vertPos, normal,
 						new Vector4( tangent, 1f ),
-						new Vector2( t, vertex.TexCoord ) ) );
+						new Vector2( length * vScale, vertex.TexCoord ) ) );
 				}
 			}
 
