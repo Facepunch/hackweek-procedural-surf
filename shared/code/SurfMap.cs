@@ -32,6 +32,8 @@ public partial class SurfMap
 			_entity = null;
 		}
 
+		public bool IsValid => _entity.IsValid() || _sceneObject.IsValid();
+
 		public void Delete()
 		{
 			_entity?.Delete();
@@ -163,21 +165,30 @@ public partial class SurfMap
 
 			foreach ( var entity in _entities )
 			{
-				entity.Delete();
+				if ( entity.IsValid() )
+				{
+					entity.Delete();
+				}
 			}
 
 			_entities.Clear();
 
 			foreach ( var sceneObj in _sceneObjects )
 			{
-				sceneObj.Delete();
+				if ( sceneObj.IsValid() )
+				{
+					sceneObj.Delete();
+				}
 			}
 
 			_sceneObjects.Clear();
 
 			foreach ( var shape in _physicsShapes )
 			{
-				shape.Remove();
+				if ( shape.IsValid() )
+				{
+					shape.Remove();
+				}
 			}
 
 			_physicsShapes.Clear();
@@ -229,19 +240,6 @@ public partial class SurfMap
 			}
 
 			return new MapModel( AddSceneObject( Model.Load( path ) ) );
-		}
-
-		protected void UpdateTransform( Transform transform )
-		{
-			foreach ( var sceneObject in _sceneObjects )
-			{
-				sceneObject.Transform = transform;
-			}
-
-			foreach ( var entity in _entities )
-			{
-				entity.Transform = transform;
-			}
 		}
 	}
 
@@ -487,6 +485,7 @@ public partial class SurfMap
 		public int Stage { get; set; } = 1;
 
 		private readonly SupportPillar _pillar;
+		private MapModel _model;
 
 		public SpawnPlatform()
 		{
@@ -495,12 +494,12 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			AddModel( "models/surf/spawn_platform.vmdl" );
+			_model = AddModel( "models/surf/spawn_platform.vmdl" );
 		}
 
 		protected override void OnUpdate()
 		{
-			UpdateTransform( new Transform( Position, Rotation.FromYaw( Yaw ) ) );
+			_model.Transform = new Transform( Position, Rotation.FromYaw( Yaw ) );
 			_pillar.Update( new Transform( Position - Vector3.Up * 64f ) );
 		}
 
@@ -522,6 +521,7 @@ public partial class SurfMap
 		public int Stage { get; set; } = 1;
 
 		private readonly SupportPillar _pillar;
+		private MapModel _model;
 
 		public Checkpoint()
 		{
@@ -530,14 +530,14 @@ public partial class SurfMap
 
 		protected override void OnCreated()
 		{
-			AddModel( "models/surf/checkpoint.vmdl" );
+			_model = AddModel( "models/surf/checkpoint.vmdl" );
 		}
 
 		protected override void OnUpdate()
 		{
 			var rotation = Rotation.From( Angles );
 
-			UpdateTransform( new Transform( Position, rotation ) );
+			_model.Transform = new Transform( Position, rotation );
 			_pillar.Update( new Transform( Position - rotation.Up * 256f, rotation ) );
 		}
 
