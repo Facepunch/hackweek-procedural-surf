@@ -47,7 +47,12 @@ public partial class SurfMapAsset : GameResource
 		public Angles Angles { get; set; }
 		public int Stage { get; set; }
 	}
-	
+
+	public string Title { get; set; } = "Untitled";
+	public string Description { get; set; } = "No description";
+	public string Author { get; set; }
+	public DateTimeOffset Created { get; set; }
+	public DateTimeOffset Modified { get; set; }
 	public List<SupportBracket> SupportBrackets { get; set; }
 	public List<BracketAttachment> BracketAttachments { get; set; }
 	public List<TrackSection> TrackSections { get; set; }

@@ -37,6 +37,7 @@ public class SurfMapEditor : DockWindow, IAssetEditor
 	{
 		base.OnDestroyed();
 
+		GizmoInstance.Dispose();
 		World.Delete();
 	}
 

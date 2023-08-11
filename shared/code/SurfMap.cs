@@ -525,6 +525,11 @@ public partial class SurfMap
 		}
 	}
 
+	public string Title { get; set; } = "Untitled";
+	public string Description { get; set; } = "No description";
+	public DateTimeOffset Created { get; set; }
+	public DateTimeOffset Modified { get; set; }
+
 	private int _nextElementId;
 
 	private readonly Dictionary<int, MapElement> _elements = new();
@@ -632,6 +637,11 @@ public partial class SurfMap
 			return;
 		}
 
+		Title = asset.Title;
+		Description = asset.Description;
+		Created = asset.Created;
+		Modified = asset.Modified;
+
 		if ( asset.IsUninitialized )
 		{
 			var supportA = AddSupportBracket();
@@ -651,6 +661,8 @@ public partial class SurfMap
 
 			AddSpawnPlatform().Position = new Vector3( 0f, 0f, 1024f + 512f );
 			AddCheckpoint().Position = new Vector3( 2048f + 512f, 0f, 768f + 512f );
+
+			Created = Modified = DateTimeOffset.UtcNow;
 		}
 		else
 		{
@@ -755,6 +767,12 @@ public partial class SurfMap
 
 	public void Save( SurfMapAsset asset )
 	{
+		asset.Title = Title;
+		asset.Description = Description;
+		asset.Author ??= Game.UserName;
+		asset.Created = Created == default ? DateTimeOffset.UtcNow : Created;
+		asset.Modified = DateTimeOffset.UtcNow;
+
 		asset.SupportBrackets = SupportBrackets.Select( x => new SurfMapAsset.SupportBracket
 		{
 			Id = x.Id,
