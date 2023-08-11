@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Sandbox.Diagnostics;
 
@@ -71,6 +70,11 @@ public partial class SurfMap
 
 		public void Update( Transform transform )
 		{
+			if ( _owner.IsInGame && !Game.IsServer )
+			{
+				return;
+			}
+
 			_ball ??= _owner.AddModel( "models/surf_pillars/surf_pillar_ball_joint_02.vmdl" );
 			_socket ??= _owner.AddModel( "models/surf_pillars/surf_pillar_ball_joint_01.vmdl" );
 
@@ -188,6 +192,11 @@ public partial class SurfMap
 
 		protected ModelEntity AddModelEntity( string modelPath )
 		{
+			if ( IsInGame && !Game.IsServer )
+			{
+				return null;
+			}
+
 			var ent = new ModelEntity( modelPath );
 			_entities.Add( ent );
 
@@ -477,6 +486,13 @@ public partial class SurfMap
 		public float Yaw { get; set; }
 		public int Stage { get; set; } = 1;
 
+		private readonly SupportPillar _pillar;
+
+		public SpawnPlatform()
+		{
+			_pillar = new SupportPillar( this );
+		}
+
 		protected override void OnCreated()
 		{
 			AddModel( "models/surf/spawn_platform.vmdl" );
@@ -485,6 +501,7 @@ public partial class SurfMap
 		protected override void OnUpdate()
 		{
 			UpdateTransform( new Transform( Position, Rotation.FromYaw( Yaw ) ) );
+			_pillar.Update( new Transform( Position - Vector3.Up * 64f ) );
 		}
 
 		public IMapElement Clone( Vector3 direction )
@@ -504,6 +521,13 @@ public partial class SurfMap
 		public Angles Angles { get; set; }
 		public int Stage { get; set; } = 1;
 
+		private readonly SupportPillar _pillar;
+
+		public Checkpoint()
+		{
+			_pillar = new SupportPillar( this );
+		}
+
 		protected override void OnCreated()
 		{
 			AddModel( "models/surf/checkpoint.vmdl" );
@@ -511,7 +535,10 @@ public partial class SurfMap
 
 		protected override void OnUpdate()
 		{
-			UpdateTransform( new Transform( Position, Rotation.From( Angles ) ) );
+			var rotation = Rotation.From( Angles );
+
+			UpdateTransform( new Transform( Position, rotation ) );
+			_pillar.Update( new Transform( Position - rotation.Up * 256f, rotation ) );
 		}
 
 		public IMapElement Clone( Vector3 direction )
