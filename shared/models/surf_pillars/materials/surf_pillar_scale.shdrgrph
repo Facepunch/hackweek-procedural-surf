@@ -11,17 +11,32 @@
       },
       "Emission": {},
       "Opacity": {},
-      "Normal": {},
-      "Roughness": {},
-      "Metalness": {},
-      "AmbientOcclusion": {},
+      "Normal": {
+        "Identifier": "19",
+        "Output": "Result"
+      },
+      "Roughness": {
+        "Identifier": "18",
+        "Output": "Result"
+      },
+      "Metalness": {
+        "Identifier": "17",
+        "Output": "Result"
+      },
+      "AmbientOcclusion": {
+        "Identifier": "20",
+        "Output": "Result"
+      },
       "DefaultOpacity": 1,
       "DefaultRoughness": 1,
-      "DefaultMetalness": 0,
+      "DefaultMetalness": 1,
       "DefaultAmbientOcclusion": 1,
-      "PositionOffset": {},
+      "PositionOffset": {
+        "Identifier": "7",
+        "Output": "Result"
+      },
       "Identifier": "0",
-      "Position": "112,-112"
+      "Position": "1200,-144"
     },
     {
       "_class": "TextureSampler",
@@ -35,46 +50,42 @@
         "CreateInput": "CreateInputTexture2D"
       },
       "Identifier": "1",
-      "Position": "-1120,-432"
-    },
-    {
-      "_class": "TextureSampler",
-      "Coords": {},
-      "Image": "models/surf_pillars/materials/surf_pillars_ao.tga",
-      "Sampler": {},
-      "UI": {
-        "Name": "tiling_color",
-        "Default": "1,1,1,1",
-        "SrgbRead": true,
-        "CreateInput": "CreateInputTexture2D"
-      },
-      "Identifier": "2",
-      "Position": "-1104,288"
+      "Position": "-112,-976"
     },
     {
       "_class": "CommentNode",
-      "Size": "224,288",
+      "Size": "224,234",
+      "Color": "Yellow",
+      "Description": "",
+      "Title": "Top height",
+      "Layer": 2,
+      "Identifier": "2",
+      "Position": "-432,336"
+    },
+    {
+      "_class": "CommentNode",
+      "Size": "1328,288",
       "Color": "Green",
       "Description": "",
       "Title": "tiling",
-      "Layer": 1,
+      "Layer": 3,
       "Identifier": "3",
-      "Position": "-1136,224"
+      "Position": "-1200,576"
     },
     {
       "_class": "CommentNode",
-      "Size": "224,288",
+      "Size": "1264,288",
       "Color": "Green",
       "Description": "",
       "Title": "unique",
-      "Layer": 1,
+      "Layer": 3,
       "Identifier": "4",
-      "Position": "-1152,-496"
+      "Position": "-144,-1040"
     },
     {
       "_class": "VertexColor",
       "Identifier": "5",
-      "Position": "-1200,-64"
+      "Position": "-1328,-80"
     },
     {
       "_class": "SplitVector",
@@ -83,7 +94,7 @@
         "Output": "RGB"
       },
       "Identifier": "6",
-      "Position": "-960,-64"
+      "Position": "-1120,-80"
     },
     {
       "_class": "Lerp",
@@ -97,11 +108,11 @@
       },
       "C": {
         "Identifier": "6",
-        "Output": "X"
+        "Output": "Y"
       },
       "Fraction": 0.5,
       "Identifier": "7",
-      "Position": "-400,208"
+      "Position": "-48,192"
     },
     {
       "_class": "Lerp",
@@ -110,34 +121,249 @@
         "Output": "Result"
       },
       "B": {
-        "Identifier": "2",
+        "Identifier": "11",
         "Output": "Result"
       },
       "C": {
         "Identifier": "6",
         "Output": "X"
       },
-      "Fraction": 0.5,
+      "Fraction": 1,
       "Identifier": "8",
-      "Position": "-624,-48"
+      "Position": "96,-560"
     },
     {
       "_class": "Float3",
       "Value": "0,0,0",
-      "Name": "",
+      "Name": "bottom_height_z",
       "IsAttribute": false,
       "UI": {},
       "Identifier": "9",
-      "Position": "-752,192"
+      "Position": "-400,144"
     },
     {
       "_class": "Float3",
       "Value": "0,0,0",
-      "Name": "",
+      "Name": "top_height_z",
       "IsAttribute": false,
       "UI": {},
       "Identifier": "10",
-      "Position": "-752,336"
+      "Position": "-400,400"
+    },
+    {
+      "_class": "TextureTriplanar",
+      "Coords": {},
+      "Normal": {},
+      "Image": "models/surf_pillars/materials/surf_pillars_color.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "tiling_color",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "11",
+      "Position": "-1136,656"
+    },
+    {
+      "_class": "CommentNode",
+      "Size": "224,234",
+      "Color": "Green",
+      "Description": "",
+      "Title": "bottom height",
+      "Layer": 1,
+      "Identifier": "12",
+      "Position": "-432,96"
+    },
+    {
+      "_class": "TextureSampler",
+      "Coords": {},
+      "Image": "models/surf_pillars/materials/surf_pillar_unique_metal.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "unique_metal",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "13",
+      "Position": "144,-976"
+    },
+    {
+      "_class": "TextureSampler",
+      "Coords": {},
+      "Image": "models/surf_pillars/materials/surf_pillar_unique_rough.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "unique_rough",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "14",
+      "Position": "384,-976"
+    },
+    {
+      "_class": "TextureSampler",
+      "Coords": {},
+      "Image": "models/surf_pillars/materials/surf_pillar_unique_normal.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "unique_normal",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "15",
+      "Position": "640,-976"
+    },
+    {
+      "_class": "TextureSampler",
+      "Coords": {},
+      "Image": "models/surf_pillars/materials/surf_pillar_unique_ao.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "unique_ao",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "16",
+      "Position": "880,-976"
+    },
+    {
+      "_class": "Lerp",
+      "A": {
+        "Identifier": "13",
+        "Output": "Result"
+      },
+      "B": {
+        "Identifier": "21",
+        "Output": "Result"
+      },
+      "C": {
+        "Identifier": "6",
+        "Output": "X"
+      },
+      "Fraction": 1,
+      "Identifier": "17",
+      "Position": "192,-416"
+    },
+    {
+      "_class": "Lerp",
+      "A": {
+        "Identifier": "14",
+        "Output": "Result"
+      },
+      "B": {
+        "Identifier": "22",
+        "Output": "Result"
+      },
+      "C": {
+        "Identifier": "6",
+        "Output": "X"
+      },
+      "Fraction": 1,
+      "Identifier": "18",
+      "Position": "368,-304"
+    },
+    {
+      "_class": "Lerp",
+      "A": {
+        "Identifier": "15",
+        "Output": "Result"
+      },
+      "B": {
+        "Identifier": "24",
+        "Output": "Result"
+      },
+      "C": {
+        "Identifier": "6",
+        "Output": "X"
+      },
+      "Fraction": 1,
+      "Identifier": "19",
+      "Position": "496,-176"
+    },
+    {
+      "_class": "Lerp",
+      "A": {
+        "Identifier": "16",
+        "Output": "Result"
+      },
+      "B": {
+        "Identifier": "23",
+        "Output": "Result"
+      },
+      "C": {
+        "Identifier": "6",
+        "Output": "X"
+      },
+      "Fraction": 1,
+      "Identifier": "20",
+      "Position": "640,-32"
+    },
+    {
+      "_class": "TextureTriplanar",
+      "Coords": {},
+      "Normal": {},
+      "Image": "models/surf_pillars/materials/surf_pillars_metal.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "tiling_metal",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "21",
+      "Position": "-896,656"
+    },
+    {
+      "_class": "TextureTriplanar",
+      "Coords": {},
+      "Normal": {},
+      "Image": "models/surf_pillars/materials/surf_pillars_rough.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "tiling_rough",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "22",
+      "Position": "-640,656"
+    },
+    {
+      "_class": "TextureTriplanar",
+      "Coords": {},
+      "Normal": {},
+      "Image": "models/surf_pillars/materials/surf_pillars_ao.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "tiling_ao",
+        "Default": "1,1,1,1",
+        "SrgbRead": true,
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "23",
+      "Position": "-176,656"
+    },
+    {
+      "_class": "NormapMapTriplanar",
+      "Coords": {},
+      "Normal": {},
+      "Image": "models/surf_pillars/materials/surf_pillars_normal.tga",
+      "Sampler": {},
+      "UI": {
+        "Name": "tiling_normal",
+        "Default": "0.5,0.5,1,1",
+        "Extension": "Normal",
+        "Processor": "NormalizeNormals",
+        "ColorSpace": "Linear",
+        "CreateInput": "CreateInputTexture2D"
+      },
+      "Identifier": "24",
+      "Position": "-400,640"
     }
   ]
 }
