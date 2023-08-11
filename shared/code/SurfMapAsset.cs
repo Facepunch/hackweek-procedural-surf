@@ -38,12 +38,14 @@ public partial class SurfMapAsset : GameResource
 	{
 		public Vector3 Position { get; set; }
 		public float Yaw { get; set; }
+		public int Stage { get; set; }
 	}
 
 	public class Checkpoint : MapElement
 	{
 		public Vector3 Position { get; set; }
 		public Angles Angles { get; set; }
+		public int Stage { get; set; }
 	}
 	
 	public List<SupportBracket> SupportBrackets { get; set; }

@@ -79,6 +79,38 @@ public class Viewport : Frame
 			Gizmo.Draw.Line( bracket.Position + tangent * attachment.Min, bracket.Position + tangent * attachment.Max );
 		}
 
+		var nextStage = 1;
+		foreach ( var platform in Editor.Map.SpawnPlatforms )
+		{
+			if ( platform.Stage != nextStage )
+			{
+				platform.Stage = nextStage;
+				platform.Changed();
+			}
+
+			var rotation = Rotation.FromYaw( platform.Yaw );
+
+			Gizmo.Draw.Color = Gizmo.Colors.Red;
+			Gizmo.Draw.Text( $"Stage {nextStage}", new Transform( platform.Position + Vector3.Up * 32f, rotation ) );
+			Gizmo.Draw.Line( platform.Position, platform.Position + rotation.Forward * 256f );
+
+			nextStage++;
+		}
+
+		nextStage = 1;
+		foreach ( var checkpoint in Editor.Map.Checkpoints )
+		{
+			if ( checkpoint.Stage != nextStage )
+			{
+				checkpoint.Stage = nextStage;
+				checkpoint.Changed();
+			}
+
+			Gizmo.Draw.Text( $"Stage {nextStage}", new Transform( checkpoint.Position, Rotation.From( checkpoint.Angles ) ) );
+
+			nextStage++;
+		}
+
 		if ( Editor.Map.UpdateChangedElements() )
 		{
 			Editor.MarkChanged();
@@ -114,7 +146,7 @@ public class Viewport : Frame
 				{
 					_dragOffset.z -= snappedOffset;
 
-					element.Position = element.Position.WithZ( Math.Max( element.Position.z + snappedOffset, 128f ) );
+					element.Position = element.Position.WithZ( Math.Clamp( element.Position.z + snappedOffset, 768f, 16384f ) );
 					element.Changed();
 				}
 			}
@@ -171,9 +203,7 @@ public class Viewport : Frame
 
 	private void RotateFrame()
 	{
-		var anglesElements = Editor.Map.Elements.OfType<SurfMap.IAnglesElement>().ToArray();
-
-		foreach ( var element in anglesElements )
+		foreach ( var element in Editor.Map.Elements.OfType<SurfMap.IAnglesElement>() )
 		{
 			using var elemScope = Gizmo.Scope( $"AnglesElem{element.Id}", element.Position );
 
@@ -196,6 +226,27 @@ public class Viewport : Frame
 
 					element.Angles = newRot;
 					element.Changed();
+				}
+			}
+		}
+
+		foreach ( var platform in Editor.Map.Elements.OfType<SurfMap.SpawnPlatform>() )
+		{
+			using var elemScope = Gizmo.Scope( $"StartPlatform{platform.Id}", platform.Position );
+			using var _ = Gizmo.GizmoControls.PushFixedScale();
+
+			if ( Gizmo.Control.RotateSingle( "Yaw", Rotation.FromPitch( 90f ), Gizmo.Colors.Yaw, out var delta ) )
+			{
+				_rotateOffset.yaw += delta.Yaw();
+
+				var snappedRotation = MathF.Round( _rotateOffset.yaw / 22.5f ) * 22.5f;
+
+				if ( snappedRotation != 0f )
+				{
+					_rotateOffset.yaw -= snappedRotation;
+
+					platform.Yaw += snappedRotation;
+					platform.Changed();
 				}
 			}
 		}

@@ -474,8 +474,8 @@ public partial class SurfMap
 	public partial class SpawnPlatform : MapElement, IPositionElement
 	{
 		public Vector3 Position { get; set; }
-
 		public float Yaw { get; set; }
+		public int Stage { get; set; } = 1;
 
 		protected override void OnCreated()
 		{
@@ -502,6 +502,7 @@ public partial class SurfMap
 	{
 		public Vector3 Position { get; set; }
 		public Angles Angles { get; set; }
+		public int Stage { get; set; } = 1;
 
 		protected override void OnCreated()
 		{
@@ -699,6 +700,7 @@ public partial class SurfMap
 					{
 						Id = spawnPlatform.Id,
 						Map = this,
+						Stage = spawnPlatform.Stage,
 						Position = spawnPlatform.Position,
 						Yaw = spawnPlatform.Yaw
 					} );
@@ -711,6 +713,7 @@ public partial class SurfMap
 					{
 						Id = checkpoint.Id,
 						Map = this,
+						Stage = checkpoint.Stage,
 						Position = checkpoint.Position,
 						Angles = checkpoint.Angles
 					} );
@@ -775,12 +778,12 @@ public partial class SurfMap
 
 		asset.SpawnPlatforms = SpawnPlatforms.Select( x => new SurfMapAsset.SpawnPlatform
 		{
-			Id = x.Id, Position = x.Position, Yaw = x.Yaw
+			Id = x.Id, Stage = x.Stage, Position = x.Position, Yaw = x.Yaw
 		} ).ToList();
 
 		asset.Checkpoints = Checkpoints.Select( x => new SurfMapAsset.Checkpoint
 		{
-			Id = x.Id, Position = x.Position, Angles = x.Angles
+			Id = x.Id, Stage = x.Stage, Position = x.Position, Angles = x.Angles
 		} ).ToList();
 	}
 }
